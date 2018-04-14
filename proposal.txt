@@ -1,0 +1,44 @@
+CS 5610 Project 2 Proposal
+Student 1: Jialin Gao
+Student 2: Xiangshi Sun
+Student 3: Lu Ji
+
+
+Currency Price Monitoring
+
+What our app lets users do?
+As for now, Bitcoin is one of hot digital currency which is desirable and limited.
+It is well known in the market. Our team is going to develop an web application
+for cryptocurrency traders, investors, and financial analysts to monitor and get
+alerts about cryptocurrency price fluctuations as well as other financial assets
+on NASDAQ/DOW. Users can use our developed application to monitor preferred
+assets prices for all exchanges. In addition, they can set thresholds for their
+preferred assets prices and then get email alerts. Users can also have great view
+for price fluctuations with beautiful charts. What’s more, users can get instant
+notification when there is an arbitrage opportunity for their selected type of
+assets. Last but not least, our platform will support paper trading.
+
+
+Which external API(s) you will use, how, and why?
+We decide to use an external web API called Coinbase for cryptocurrency and
+Alpha Vantage API or Intrinio API for other financial assets data in the
+server-side of our application. These powerful APIs would help us pull
+real-time price updates on the assets. Also, Coinbase provides both API key for
+data access and OAuth2 for authentication, which will be helpful for security
+consideration.
+
+
+What data you will store in your database?
+In the database, we are supposed to store user profiles and custom settings,
+which includes salt hashed login credentials, users’ asset portfolios, current
+balance, current earnings etc.
+
+
+How you plan to build your UI?
+As for UI, our application will support the following two models for login.
+Users can either login with their own username and password, or OAuthed from
+a third-party provider. In the main page, users can log out, edit their profiles
+and custom settings, and choose preferred assets to monitor. Also, there is a
+page for users to use their predefined amount of balance to make simulated
+trades and view their virtual earnings/losses so as to practice their
+investment skills.
