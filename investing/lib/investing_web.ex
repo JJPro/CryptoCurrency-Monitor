@@ -40,6 +40,7 @@ defmodule InvestingWeb do
       import InvestingWeb.Router.Helpers
       import InvestingWeb.ErrorHelpers
       import InvestingWeb.Gettext
+      import Investing.Accounts.Helper
     end
   end
 

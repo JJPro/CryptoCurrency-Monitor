@@ -17,6 +17,22 @@ defmodule InvestingWeb.Router do
     pipe_through :browser # Use the default browser stack
 
     get "/", PageController, :index
+    get "/main", PageController, :main
+
+    resources "/users", UserController
+
+    get "/login", SessionController, :new
+    post "/login", SessionController, :create
+    delete "/logout", SessionController, :delete
+
+  end
+
+  scope "/auth", InvestingWeb do
+    pipe_through :browser
+
+    # the request function which is defined by the Ueberauth module
+    get "/:provider", AuthController, :request
+    get "/:provider/callback", AuthController, :callback
   end
 
   # Other scopes may use custom stacks.
