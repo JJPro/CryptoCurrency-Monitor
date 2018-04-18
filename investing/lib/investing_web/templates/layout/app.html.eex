@@ -12,6 +12,11 @@
   </head>
 
   <body>
+    <%= if @current_user do %>
+      <script type="text/javascript">
+        window.user = <%= @current_user.id %>;
+      </script>
+    <% end %>
     <div class="container">
 
       <%= render "navbar.html", conn: @conn %>

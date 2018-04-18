@@ -26,8 +26,7 @@ defmodule InvestingWeb.SessionController do
 
   def delete(conn, _) do
     conn
-    |> delete_session(:current_user)
-    |> delete_session(:current_username)
+    |> configure_session(drop: true)
     |> put_flash(:info, "Logged out")
     |> redirect(to: "/")
   end
