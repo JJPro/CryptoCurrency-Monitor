@@ -20,7 +20,7 @@ defmodule Investing.Mixfile do
   def application do
     [
       mod: {Investing.Application, []},
-      extra_applications: [:logger, :runtime_tools]
+      extra_applications: [:logger, :runtime_tools, :bamboo, :bamboo_smtp]
     ]
   end
 
@@ -41,11 +41,13 @@ defmodule Investing.Mixfile do
       {:phoenix_live_reload, "~> 1.0", only: :dev},
       {:gettext, "~> 0.11"},
       {:cowboy, "~> 1.0"},
-      ## 
+      ##
       {:comeonin, "~> 4.0"},
       {:argon2_elixir, "~> 1.2"},
       {:ueberauth, "~> 0.4"},
-      {:ueberauth_github, "~> 0.7"}
+      {:ueberauth_github, "~> 0.7"},
+      {:bamboo, "~> 0.8"},
+      {:bamboo_smtp, "~> 1.4.0"}
     ]
   end
 

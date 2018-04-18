@@ -27,6 +27,10 @@ defmodule InvestingWeb.Router do
 
   end
 
+  if Mix.env == :dev do
+    forward "/sent_emails", Bamboo.EmailPreviewPlug
+  end
+
   scope "/auth", InvestingWeb do
     pipe_through :browser
 
