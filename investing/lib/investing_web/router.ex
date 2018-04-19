@@ -18,13 +18,16 @@ defmodule InvestingWeb.Router do
     pipe_through :browser # Use the default browser stack
 
     get "/", PageController, :index
-    get "/main", PageController, :main
+    get "/alerts", PageController, :index
+    # get "/main", PageController, :main
 
     resources "/users", UserController
+    resources "/assets", AssetController, except: [:new, :edit]
 
     get "/login", SessionController, :new
     post "/login", SessionController, :create
     delete "/logout", SessionController, :delete
+
 
   end
 
