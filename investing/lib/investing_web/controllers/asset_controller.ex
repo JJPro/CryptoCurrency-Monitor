@@ -3,12 +3,18 @@ defmodule InvestingWeb.AssetController do
 
   alias Investing.Finance
   alias Investing.Finance.Asset
+  alias Investing.Accounts
 
   action_fallback InvestingWeb.FallbackController
 
-  def index(conn, _params) do
-    assets = Finance.list_assets()
-    render(conn, "index.json", assets: assets)
+  def index(conn, %{"token" => token}) do
+    IO.puts ">>>>> index"
+
+    # list assets of user
+    with {:ok, user_id} <- Phoenix.Token.verify(conn, "auth token", token, max_age: 86400) do
+      assets = Finance.list_assets_of_user(user_id |> IO.inspect(label: ">>>> user_id"))
+      render(conn, "index.json", assets: assets)
+    end
   end
 
   def create(conn, %{"asset" => asset_params}) do

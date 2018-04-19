@@ -21,6 +21,12 @@ defmodule Investing.Finance do
     Repo.all(Asset)
   end
 
+  def list_assets_of_user(uid) do
+    Repo.all( from a in Asset,
+              where: a.user_id == ^uid,
+              select: a)
+  end
+
   @doc """
   Gets a single asset.
 

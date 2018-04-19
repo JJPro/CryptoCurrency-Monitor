@@ -20,7 +20,7 @@ defmodule InvestingWeb.UserSocket do
   # performing token verification on connect.
   def connect(%{"token" => token}, socket) do
     # max_age: 1209600 is equivalent to two weeks in seconds
-    case Phoenix.Token.verify(socket, "user socket", token, max_age: 1209600) do
+    case Phoenix.Token.verify(socket, "auth token", token, max_age: 86400) do
       {:ok, user_id} ->
         {:ok, assign(socket, :user, user_id)}
       {:error, _reason} ->

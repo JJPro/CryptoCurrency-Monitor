@@ -23,7 +23,6 @@ defmodule InvestingWeb.Router do
     # get "/main", PageController, :main
 
     resources "/users", UserController
-    resources "/assets", AssetController, except: [:new, :edit]
 
     get "/login", SessionController, :new
     post "/login", SessionController, :create
@@ -45,13 +44,17 @@ defmodule InvestingWeb.Router do
   end
 
   # Other scopes may use custom stacks.
-  # scope "/api", InvestingWeb do
-  #   pipe_through :api
-  # end
+  scope "/api/v1", InvestingWeb do
+    pipe_through :api
+
+    resources "/assets", AssetController, only: [:create, :delete, :show]
+    get "/assets/user/:token", AssetController, :index
+    get "/assets/lookup/:term", AssetController, :lookup
+  end
 
   defp put_user_token(conn, _) do
     if current_user = conn.assigns[:current_user] do
-      token = Phoenix.Token.sign(conn, "user socket", current_user.id)
+      token = Phoenix.Token.sign(conn, "auth token", current_user.id)
       assign(conn, :user_token, token)
     else
       conn

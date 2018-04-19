@@ -17,9 +17,9 @@
 // Local files can be imported directly using relative
 // paths "./socket" or full ones "web/static/js/socket".
 
-import socket from "./socket"
+// import socket from "./socket";
 
-import app_init from './templates/index';
+// import app_init from './templates/index';
 $(() => {
-  app_init(document.querySelector('#root'));
+  // app_init(document.querySelector('#root'));
 });

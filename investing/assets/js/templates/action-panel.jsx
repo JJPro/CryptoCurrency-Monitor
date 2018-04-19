@@ -20,7 +20,7 @@ export default connect( state_map )( (props) => {
   let onChangeSymbol = ( ev ) => {
     // TODO: trigger api function to search for entered term, which will then trigger redux state update
     let symbol = ev.target.value;
-    // api.search_symbol(symbol);
+    // api.lookup_asset(symbol);
   };
 
   /**
