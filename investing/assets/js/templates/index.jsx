@@ -10,6 +10,8 @@ import Watchlist from './watchlist';
 import Alerts from './alerts';
 // import AlertPanel from './alert-panel';
 
+import socket from '../socket';
+
 
 export default (root) => {
   render(
@@ -27,11 +29,15 @@ let Index = connect(state => state)( props => {
   return (
     <Router>
       <div>
-        <NavLink to="/" exact={true} >Watchlist</NavLink>
+        <NavLink to="/" exact={true} >Watchlist </NavLink>
           |
-        <NavLink to="/alerts" exact={true} >Alerts</NavLink>
+        <NavLink to="/alerts" exact={true} > Alerts</NavLink>
         <Switch>
-          <Route path="/" exact={true} component={Watchlist} />
+          <Route path="/" exact={true} render={
+              (props) =>
+              <Watchlist {...props} channel={socket.channel(`watchlist:${window.userToken}`)} />
+            }
+          />}
           <Route path="/alerts" exact={true} component={Alerts} />
         </Switch>
         <ActionPanel />

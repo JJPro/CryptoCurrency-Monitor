@@ -1,7 +1,7 @@
 import React from 'react';
 import { connect } from 'react-redux';
-// import api from '../api';
-// import store from '../store';
+import api from '../redux/api';
+import store from '../redux/store';
 
 export default connect( state_map )( (props) => {
   let style = {};
@@ -12,10 +12,15 @@ export default connect( state_map )( (props) => {
 
   style.price = {
     color: props.current_asset.price_color,
+    padding: "5px",
+    minWidth: "4em",
+    display: "inline-block",
   };
 
   let onChangeSymbol = ( ev ) => {
     // TODO: trigger api function to search for entered term, which will then trigger redux state update
+    let symbol = ev.target.value;
+    // api.search_symbol(symbol);
   };
 
   /**
@@ -27,8 +32,8 @@ export default connect( state_map )( (props) => {
    }
    */
   return (
-    <div className="fixed-bottom d-flex justify-content-center" style={style.panel}>
-      <div className="form-group mb-2">
+    <div className="fixed-bottom container-fluid d-flex justify-content-around align-items-center py-5" style={style.panel}>
+      <div className="mr-5">
         {
           (() => {
             if (props.current_asset.prompts){
@@ -47,11 +52,11 @@ export default connect( state_map )( (props) => {
         }
         <input type="text" className="form-control" placeholder="Symbol" onChange={ onChangeSymbol } />
       </div>
-      <div className="form-group mb-2">
-        <label for="price" className="sr-only">Price: </label>
-        <input type="text" readonly className="form-control-plaintext" id="price" value={props.current_asset.value} style={ style.price } />
+      <div className="mr-5">
+        <label for="price">Price: </label>
+        <span style={ style.price }>{props.current_asset.value}</span>
       </div>
-      <button className="btn btn-info mb-2">Watch</button>
+      <button className="btn btn-info mr-5">Watch</button>
     </div>
   );
 } );
@@ -64,11 +69,12 @@ function state_map(state) {
 
 function Prompt(props) {
   let style = {};
+  style.symbol = {color: "dodgeblue"};
   style.name = {color: "lightgray"};
   style.market = {...style.name, };
   return (
     <div className="dropdown-item">
-      <strong>{ props.prompt.symbol }</strong> <span className="float-right" style={ style.market }>{ props.prompt.market }</span>
+      <strong style={style.symbol}>{ props.prompt.symbol }</strong> <span className="float-right" style={ style.market }>{ props.prompt.market }</span>
       <p style={ style.name }>{ props.prompt.name }</p>
     </div>
   );
