@@ -56,3 +56,8 @@ config :investing, Investing.Repo,
   database: "investing_dev",
   hostname: "localhost",
   pool_size: 10
+
+# Configure Bamboo with SendGridAdapter and api_key
+config :investing, Investing.Mailer,
+  adapter: Bamboo.SendgridAdapter,
+  api_key: "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"
