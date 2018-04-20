@@ -23,11 +23,8 @@ config :logger, :console,
   metadata: [:user_id]
 
 config :investing, Investing.Mailer,
-  adapter: Bamboo.LocalAdapter
-  #adapter: Bamboo.SMTPAdapter,
-  #server: "smtp.domain",
-  #hostname: "your.domain",
-  #port: 1025
+  adapter: Bamboo.SendgridAdapter,
+  api_key: "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"
 
 
 # Import environment specific config. This must remain at the bottom
@@ -47,3 +44,6 @@ config :ueberauth, Ueberauth,
 config :ueberauth, Ueberauth.Strategy.Github.OAuth,
   client_id: "94ce5989e1edc92d15d6",
   client_secret: "d14b8d8c4dcec7aa00b5de08aa32bfcd08e5faf3"
+
+
+# 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
