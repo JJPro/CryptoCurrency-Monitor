@@ -20,7 +20,7 @@ defmodule Investing.Mixfile do
   def application do
     [
       mod: {Investing.Application, []},
-      extra_applications: [:logger, :runtime_tools, :bamboo, :bamboo_smtp]
+      extra_applications: [:logger, :runtime_tools, :bamboo, :bamboo_smtp, :httpoison,]
     ]
   end
 
@@ -47,7 +47,9 @@ defmodule Investing.Mixfile do
       {:ueberauth, "~> 0.4"},
       {:ueberauth_github, "~> 0.7"},
       {:bamboo, "~> 0.8"},
-      {:bamboo_smtp, "~> 1.4.0"}
+      {:bamboo_smtp, "~> 1.4.0"},
+      {:websockex, "~> 0.4.0"},
+      {:httpoison, "~> 1.0"},
     ]
   end
 

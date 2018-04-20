@@ -8,8 +8,6 @@ import store from '../redux/store';
 export default connect( state_map )( class Watchlist extends Component {
   constructor(props){
     super(props);
-
-    this.channel = props.channel;
     this.channelInit();
   }
 
@@ -36,6 +34,7 @@ export default connect( state_map )( class Watchlist extends Component {
   }
 
   channelInit() {
+    this.channel = socket.channel(`watchlist:${window.userToken}`);
     this.channel.join()
     .receive("ok")
     .receive("error", resp => { console.log("Unable to join room channel", resp) });

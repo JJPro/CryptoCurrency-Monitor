@@ -3,6 +3,7 @@ defmodule InvestingWeb.UserSocket do
 
   ## Channels
   channel "watchlist:*", InvestingWeb.WatchlistChannel
+  channel "action_panel:*", InvestingWeb.ActionPanelChannel
 
   ## Transports
   transport :websocket, Phoenix.Transports.WebSocket

@@ -26,7 +26,7 @@ defmodule InvestingWeb.Router do
 
     get "/login", SessionController, :new
     post "/login", SessionController, :create
-    delete "/logout", SessionController, :delete
+    get "/logout", SessionController, :delete
 
 
   end

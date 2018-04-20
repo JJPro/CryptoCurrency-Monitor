@@ -5,6 +5,7 @@ defmodule Investing.Finance.Asset do
 
   schema "assets" do
     field :symbol, :string
+    field :name, :string
     field :market, :string
     belongs_to :user, Investing.Accounts.User # will generate default foreign key :user_id
 

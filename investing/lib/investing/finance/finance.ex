@@ -61,6 +61,43 @@ defmodule Investing.Finance do
     |> Repo.insert()
   end
 
+  def lookup_asset(term) do
+    # fetch data from gdax and alpha vantage
+    lookup_crypto(term) ++ lookup_stock(term)
+    |> IO.inspect(label: ">>>>> stock")
+  end
+
+  defp lookup_stock(term) do
+    %{body: body, status_code: status_code} = HTTPoison.get!("https://ws-api.iextrading.com/1.0/stock/#{term}/company" |> IO.inspect(label: ">>>> stock query url"))
+
+    case status_code do
+      200 ->
+        %{"companyName" => name, "symbol" => symbol, "exchange" => market} = Poison.decode!(body)
+        [%{symbol: symbol, name: name, market: market}] |> IO.inspect(label: ">>>> stock lookup res")
+      _ -> []
+    end
+  end
+
+  defp lookup_crypto(term) do
+    all_crypto_assets
+    |> Enum.filter(
+    fn crypto ->
+      String.contains?(String.downcase(crypto.symbol), term) ||
+      String.contains?(String.downcase(crypto.name), term) ||
+      String.contains?(String.downcase(crypto.market), term)
+    end)
+    |> IO.inspect(label: ">>>>>>> crypto lookup res")
+  end
+
+  defp all_crypto_assets do
+    [
+      %{symbol: "BTC-USD", name: "Bitcoin USD", market: "CryptoCurrency"},
+      %{symbol: "LTC-USD", name: "Litecoin USD", market: "CryptoCurrency"},
+      %{symbol: "ETH-USD", name: "Ether USD", market: "CryptoCurrency"},
+      %{symbol: "BCH-USD", name: "Bitcoin Cash USD", market: "CryptoCurrency"},
+    ]
+  end
+
   @doc """
   Updates a asset.
 

@@ -10,7 +10,7 @@
     <div class="text-right">
       <%= if logged_in?(@conn) do %>
         <span class="badge badge-dark mr-2"><%= current_user(@conn).username %></span>
-        <%= link "Logout", to: session_path(@conn, :delete), method: :delete, class: "btn btn-secondary" %>
+        <%= link "Logout", to: session_path(@conn, :delete), method: :get, class: "btn btn-secondary" %>
       <% else %>
         <%= link "Login", to: session_path(@conn, :new), class: "btn btn-primary" %>
         <%= link "Register", to: user_path(@conn, :new), class: "btn btn-secondary" %>

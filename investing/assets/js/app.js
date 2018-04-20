@@ -19,7 +19,7 @@
 
 // import socket from "./socket";
 
-// import app_init from './templates/index';
+import app_init from './templates/index';
 $(() => {
-  // app_init(document.querySelector('#root'));
+  app_init(document.querySelector('#root'));
 });

@@ -5,6 +5,9 @@ defmodule InvestingWeb.AssetView do
   def render("index.json", %{assets: assets}) do
     %{data: render_many(assets, AssetView, "asset.json")}
   end
+  def render("index.json", %{prompts: prompts}) do
+    %{data: render_many(prompts, AssetView, "prompt.json")}
+  end
 
   def render("show.json", %{asset: asset}) do
     %{data: render_one(asset, AssetView, "asset.json")}
@@ -13,6 +16,14 @@ defmodule InvestingWeb.AssetView do
   def render("asset.json", %{asset: asset}) do
     %{id: asset.id,
       symbol: asset.symbol,
+      name: asset.name,
       market: asset.market}
   end
+
+  def render("prompt.json", %{asset: asset}) do
+    %{symbol: asset.symbol,
+      name: asset.name,
+      market: asset.market}
+  end
+
 end
