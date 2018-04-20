@@ -3,6 +3,7 @@ Student 1: Jialin Gao
 Student 2: Xiangshi Sun
 Student 3: Lu Ji
 
+Report Link: https://docs.google.com/document/d/1H0GeQj58Tb1KpE803YytXM_-CdTF6CH6bgRLiZbNOHA/
 
 Currency Price Monitoring
 
