@@ -27,7 +27,12 @@ export default connect( state_map )( class ActionPanel extends Component {
 
   onChangeSymbol(ev) {
     let symbol = ev.target.value;
-    api.lookup_asset(symbol);
+    if (symbol)
+      api.lookup_asset(symbol);
+    else
+      store.dispatch({
+        type: "CLEAR_PROMPTS"
+      });
   }
 
   render(){
