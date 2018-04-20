@@ -14,7 +14,7 @@ defmodule Investing.Application do
       supervisor(InvestingWeb.Endpoint, []),
       # Start your own worker by calling: Investing.Worker.start_link(arg1, arg2, arg3)
       # worker(Investing.Worker, [arg1, arg2, arg3]),
-      worker(Investing.Finance.CoinbaseServer, ["WebSockex is Great"]), 
+      worker(Investing.Finance.CoinbaseServer, []), 
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
