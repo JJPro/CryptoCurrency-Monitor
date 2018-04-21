@@ -114,17 +114,22 @@ defmodule Investing.Finance.CoinbaseServer do
   check state and broadcast to all channels of the received symbol update
   """
   def handle_frame({type, msg}, state) do
-    data = Poison.decode!(msg)
-    |> IO.inspect(label: "received message")
+    # data = Poison.decode!(msg)
+    # |> IO.inspect(label: "received message")
 
-    Enum.each(state[data["product_id"]] |> IO.inspect(label: "========= channel list"), fn(channel) ->
-      msg = {
-        :update_asset_price,
-        %{symbol: data["product_id"],
-        price: data["price"]}
-      }
-      Process.send(channel, msg, [])
-    end )
+    IO.inspect(state, ">>>>>>>>> state is ")
+    # channels = state
+    # Enum.each(, fun)
+
+    # Enum.each(state[data["product_id"]] |> IO.inspect(label: "========= channel list"), fn(channel) ->
+    #   IO.inspect(channel, "============= KKKKKKKKKK======")
+    #   # msg = {
+    #   #   :update_asset_price,
+    #   #   %{symbol: data["product_id"],
+    #   #   price: data["price"]}
+    #   # }
+    #   # Process.send(channel, msg, [])
+    # end )
 
     {:ok, state}
   end

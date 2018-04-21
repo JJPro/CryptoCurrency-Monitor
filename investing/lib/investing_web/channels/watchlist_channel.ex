@@ -1,6 +1,7 @@
 defmodule InvestingWeb.WatchlistChannel do
   use InvestingWeb, :channel
   alias Investing.Finance.CoinbaseServer
+  alias Investing.Finance.StockServer
   alias Investing.Finance
 
   def join("watchlist:"<>token, payload, socket) do
