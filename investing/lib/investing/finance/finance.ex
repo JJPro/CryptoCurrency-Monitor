@@ -98,6 +98,15 @@ defmodule Investing.Finance do
     ]
   end
 
+  def market(symbol) do
+    if symbol in Enum.map(all_crypto_assets, fn c -> c.symbol end) do
+      "CryptoCurrency"
+    else 
+      # TODO: query database for market name 
+      "query database for market name"
+    end
+  end
+
   @doc """
   Updates a asset.
 

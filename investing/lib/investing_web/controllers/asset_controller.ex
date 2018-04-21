@@ -17,14 +17,13 @@ defmodule InvestingWeb.AssetController do
     end
   end
 
-  def create(conn, %{"asset" => asset_params, "token" => token}) do
-    with {:ok, user_id} <- Phoenix.Token.verify(conn, "auth token", token, max_age: 86400) do
-      with {:ok, %Asset{} = asset} <- Finance.create_asset(asset_params |> IO.inspect(label: ">>>>> create asset: asset_params")) do
-        conn
-        |> put_status(:created)
-        |> put_resp_header("location", asset_path(conn, :show, asset))
-        |> render("show.json", asset: asset)
-      end
+  def create(conn, %{"symbol" => symbol, "token" => token}) do
+    with {:ok, user_id} <- Phoenix.Token.verify(conn, "auth token", token, max_age: 86400),
+         {:ok, %Asset{} = asset} <- Finance.create_asset(%{symbol: symbol, user_id: user_id}) do
+      conn
+      |> put_status(:created)
+      |> put_resp_header("location", asset_path(conn, :show, asset))
+      |> render("show.json", asset: asset)
     end
   end
 

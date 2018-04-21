@@ -12,14 +12,14 @@ export default connect( state_map )( class ActionPanel extends Component {
   }
 
   channelInit(){
-    this.channel = socket.channel(`action_pannel:${"kk"}`);
+    this.channel = socket.channel(`action_panel`, {token: window.userToken});
     this.channel.join()
     .receive("ok")
     .receive("error", resp => { console.log("Unable to join action_pannel channel", resp) });
 
     this.channel.on("update_current_asset", (asset) => {
       store.dispatch({
-        type: "SET_CURRENT_ASSET",
+        type: "UPDATE_CURRENT_ASSET_PRICE",
         asset: asset
       });
     });
@@ -35,24 +35,42 @@ export default connect( state_map )( class ActionPanel extends Component {
       });
   }
 
+  onKeyDown(ev) {
+    if (ev.keyCode == 27){
+      store.dispatch({type: "CLEAR_PROMPTS"});
+      ev.target.value = "";
+    }
+  }
+
+  addToWatchlist(){
+    api.add_asset(window.userToken, this.props.current_asset.symbol, () => {
+      /*** db record creation & redux store insertion success, do the following afterwards:
+      * 1. subscribe for price update
+      */
+      let watchlist_channel = this.channel.socket.channels.find( ch => {return ch.topic.includes("watchlist")});
+      watchlist_channel.push("subscribe", {token: window.userToken, asset: this.props.current_asset});
+    });
+  }
+
   render(){
     let style = {};
     style.panel = {
       borderTop: "1px solid lightgray",
       backgroundColor: "white",
     };
-
+    style.symbol = {
+      fontWeight: "bold",
+    };
     style.price = {
       color: this.props.current_asset.price_color,
       padding: "5px",
       minWidth: "4em",
       display: "inline-block",
+      fontWeight: "bold",
     };
-
     style.search_field_wrapper = {
       position: "relative",
     };
-
     style.dropdown_menu = {
       position: "absolute",
       display: "block",
@@ -79,7 +97,7 @@ export default connect( state_map )( class ActionPanel extends Component {
                   <div className="dropdown-menu" style={style.dropdown_menu}>
                     {
                       this.props.current_asset.prompts.map( (prompt) => {
-                        return <Prompt prompt={prompt} channel={this.channel} key={prompt.name} />
+                        return <Prompt prompt={prompt} old_symbol={this.props.current_asset.symbol} channel={this.channel} key={prompt.name} />
                       })
                     }
                   </div>
@@ -88,13 +106,17 @@ export default connect( state_map )( class ActionPanel extends Component {
               }
             })()
           }
-          <input type="text" className="form-control" placeholder="Symbol" onChange={ this.onChangeSymbol.bind(this) } />
+          <input type="text" className="form-control" placeholder="Symbol" onChange={ this.onChangeSymbol.bind(this) } onKeyDown={ this.onKeyDown.bind(this) } />
         </div>
         <div className="mr-5">
-          <label for="price">Price: </label>
-          <span style={ style.price }>{this.props.current_asset.value}</span>
+          <span>Symbol: </span>
+          <span style={ style.symbol }> {this.props.current_asset.symbol}</span>
         </div>
-        <button className="btn btn-info">Watch</button>
+        <div className="mr-5">
+          <span>Price: </span>
+          <span style={ style.price }>$ {this.props.current_asset.price}</span>
+        </div>
+        <button className="btn btn-info" onClick={ this.addToWatchlist.bind(this) } disabled={ this.props.current_asset.symbol.length == 0 } >Watch</button>
       </div>
     );
   }
@@ -116,7 +138,10 @@ function Prompt(props) {
     // channel.push(....)
     // inform server to send us realtime update about this symbol
     // channel.on to trigger Action to update current asset, this is done in channelInit
-    props.channel.push("symbol select", {symbol: prompt.symbol});
+
+    // unsubscribe for previous asset's update
+    // subscribe for new asset's update
+    props.channel.push("symbol select", {old_symbol: props.old_symbol, new_symbol: prompt.symbol, market: prompt.market, token: window.userToken});
   }
 
   return (

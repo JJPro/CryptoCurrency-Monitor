@@ -17,3 +17,13 @@ Server To Client Communication:
 Server to Server Communication:
   - WebSockex (Coinbase)
   - Restful (AlphaVantage)
+
+
+
+
+for sockets care about realtime data:
+  * implement callback:
+   channel.on("update_asset_price", ({symbol, price}) => {})
+     ✓ trigger "UPDATE_ASSET_PRICE"
+
+

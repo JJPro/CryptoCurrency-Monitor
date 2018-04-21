@@ -17,14 +17,24 @@ defmodule Investing.Finance.CoinbaseServer do
     WebSockex.cast(__MODULE__, { :add_subscriber, {symbol, channel} } )
   end
 
+  def batch_subscribe(symbols, channel) do
+    WebSockex.cast(__MODULE__, { :batch_subscribe, {symbols, channel} } )
+  end
+
   def unsubscribe(symbol, channel) do
+    # update server state, deleting channel from symbol's broadcast MapSet
     WebSockex.cast(__MODULE__, { :del_subscriber, {symbol, channel} } )
   end
 
+  @doc """
+  manually send msg, for testing purpose only
+  """
   def send(msg) do
-    IO.inspect(msg, label: ">>>>> sending frame")
     WebSockex.send_frame(__MODULE__, {:text, Poison.encode!(msg)})
-    IO.puts ">>> message sent"
+  end
+
+  defp encode_frame(msg) do
+    {:text, Poison.encode!(msg)}
   end
 
 ## Callbacks
@@ -34,36 +44,65 @@ defmodule Investing.Finance.CoinbaseServer do
   end
 
   def handle_cast({ :add_subscriber, {symbol, channel} }, state) do
-    IO.puts ">>> adding suscriber #{inspect channel}"
-    # send subscribe event to gdax ticker
-    send(%{
-      type: "subscribe",
-      product_ids: [symbol],
-      channels: ["ticker"],
-    })
-
-    IO.puts ">>> subscribe message sent"
-
     # add channel to symbol's pub list in state
-    new_state = if Map.has_key?(state, symbol) do
-      %{state | symbol => MapSet.put(state[symbol], channel)}
+    if Map.has_key?(state, symbol) do
+      new_state = %{state | symbol => MapSet.put(state[symbol], channel)}
+      {:ok, new_state}
     else
-      Map.put(state, symbol, MapSet.new([channel]))
+      new_state = Map.put(state, symbol, MapSet.new([channel]))
+      frame = encode_frame(
+        %{
+          type: "subscribe",
+          product_ids: [symbol],
+          channels: ["ticker"],
+        })
+      # send subscribe event to gdax ticker
+      {:reply, frame, new_state}
     end
-     |> IO.inspect(label: ">>>>>> new state")
-    {:ok, new_state}
+  end
+
+  def handle_cast({ :batch_subscribe, {symbols, channel} }, state) do
+    # add channel to symbol's pub list in state
+    new_state = Enum.reduce(
+      symbols,
+      state,
+      fn (symbol, acc) ->
+        if Map.has_key?(acc, symbol) do
+          %{acc | symbol => MapSet.put(acc[symbol], channel)}
+        else
+          Map.put(acc, symbol, MapSet.new([channel]))
+        end
+      end
+    )
+
+    frame = encode_frame(
+      %{
+        type: "subscribe",
+        product_ids: symbols,
+        channels: ["ticker"],
+      }) |> IO.inspect(label: "========= frame being sent ======== ")
+
+    # send subscribe event to gdax ticker
+    {:reply, frame, new_state}
   end
 
   def handle_cast({ :del_subscriber, {symbol, channel} }, state) do
-    # send unsubscribe event to gdax ticker
-    send(%{
-      type: "unsubscribe",
-      product_ids: [symbol],
-      channels: ["ticker"],
-    })
+    # unsubscribe from gdax when no one is listening on given symbol
+    new_channel_set = MapSet.delete(state[symbol], channel)
+    new_state = %{state | symbol => new_channel_set}
+    if Enum.count(new_channel_set) > 0 do
+      # remove channel from symbol's pub list in state
+      {:ok, new_state}
+    else
+      frame = encode_frame(%{
+        type: "unsubscribe",
+        product_ids: [symbol],
+        channels: ["ticker"],
+      })
+      # send unsubscribe event to gdax ticker
+      {:ok, frame, new_state}
+    end
 
-    # remove channel from symbol's pub list in state
-    {:ok, %{state | symbol => MapSet.delete(state[symbol], channel)}}
   end
 
   @doc """
@@ -72,12 +111,21 @@ defmodule Investing.Finance.CoinbaseServer do
   {:reply, frame, new_state} |
   {:close, new_state} |
   {:close, close_frame, new_state} when new_state: term
-  TODO:
   check state and broadcast to all channels of the received symbol update
   """
   def handle_frame({type, msg}, state) do
     data = Poison.decode!(msg)
-    IO.inspect(data, label: "received message")
+    |> IO.inspect(label: "received message")
+
+    Enum.each(state[data["product_id"]] |> IO.inspect(label: "========= channel list"), fn(channel) ->
+      msg = {
+        :update_asset_price,
+        %{symbol: data["product_id"],
+        price: data["price"]}
+      }
+      Process.send(channel, msg, [])
+    end )
+
     {:ok, state}
   end
 

@@ -30,23 +30,40 @@ class API {
     .catch( error => console.log("Error:", error) );
   }
 
-  create_asset(token, asset, callback) {
+  add_asset(token, symbol, callback) {
     // normal RESTFUL post to :create
     fetch(`/api/v1/assets`, {
       method: 'POST',
-      body: JSON.stringify({token, asset}),
+      body: JSON.stringify({token, symbol}),
       headers: {'Content-Type': 'application/json'}
     })
     .then( resp => resp.json() )
+    .then( resp => {
+      if (resp.data) {
+        store.dispatch({
+          type: "ADD_ASSET",
+          asset: resp.data,
+        });
+        callback && callback();
+      } else {
+        // errors
+      }
+    })
+    .catch( error => console.log("Error:", error) );
+  }
+
+  delete_asset(token, asset){
+    // normal RESTFUL DELETE request
+    fetch(`/api/v1/assets/${asset.id}`, {
+      method: 'DELETE',
+      body: JSON.stringify({token}),
+      headers: {'Content-Type': 'application/json'}
+    })
     .then( (resp) => {
-      // console.log(resp);
       store.dispatch({
-        type: "ADD_ASSET",
-        asset: resp.data,
+        type: "DELETE_ASSET",
+        asset_id: asset.id,
       });
-    } )
-    .then(() => {
-      callback && callback();
     })
     .catch( error => console.log("Error:", error) );
   }
@@ -58,10 +75,6 @@ class API {
   create_alert(token, alert, callback) {
     // normal RESTFUL post to :create
 
-  }
-
-  delete_asset(token, asset){
-    // normal RESTFUL DELETE request
   }
 
   delete_alert(token, alert){
