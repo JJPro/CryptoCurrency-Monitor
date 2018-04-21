@@ -59,6 +59,7 @@ export default connect( state_map )( class ActionPanel extends Component {
       backgroundColor: "white",
     };
     style.symbol = {
+      color: "dodgerblue",
       fontWeight: "bold",
     };
     style.price = {

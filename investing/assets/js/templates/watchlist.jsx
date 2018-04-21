@@ -9,6 +9,11 @@ export default connect( state_map )( class Watchlist extends Component {
   constructor(props){
     super(props);
     this.channelInit();
+    api.request_assets(window.userToken, () => {
+        if (store.getState().assets.length > 0)
+          this.channel.push("batch_subscribe", {token: window.userToken, assets: store.getState().assets});
+
+    });
   }
 
   render(){
@@ -19,8 +24,6 @@ export default connect( state_map )( class Watchlist extends Component {
     * props.assets = [...{symbol, last_price, change, percent_change, market_cap}...]
     ***/
     if (this.props.assets.length){
-      this.channel.push("batch_subscribe", {token: window.userToken, assets: this.props.assets});
-      
       return (
         <div>
           <h2>Watchlist</h2>
@@ -62,11 +65,15 @@ export default connect( state_map )( class Watchlist extends Component {
         asset: asset
       })
     });
+    console.log(this.props);
   }
 
-  test(){
-    console.log("test gets called");
-  }
+  // componentDidMount(){
+  //   console.log("compoent did mount", this.props.assets);
+  //   if (this.props.assets.length > 0)
+  //     this.channel.push("batch_subscribe", {token: window.userToken, assets: this.props.assets});
+  //
+  // }
 
   removeAsset(asset) {
     api.delete_asset(window.userToken, asset);
@@ -84,13 +91,17 @@ function state_map(state) {
 function WatchlistEntry(props) {
   let style = {};
   style.symbol = {color: "dodgerblue", fontWeight: "bold"};
+  style.price  = {
+    color: props.asset.price_color,
+    fontWeight: "bold",
+  };
   style.close_btn = {borderRadius: "50%", padding: "2px", fontSize: "1.5rem", fontWeight: 700, lineHeight: 1, color: "#000", textShadow: "0 1px 0 #fff", opacity: .5, width: "1.5em", height: "1.5em"};
   style.close_txt = {verticalAlign: "text-top"};
 
   return (
     <tr>
       <td style={style.symbol}>{ props.asset.symbol }</td>
-      <td>{ props.asset.price }</td>
+      <td style={style.price }>{ props.asset.price }</td>
       <td>
         <button type="button" style={style.close_btn} aria-label="Close" onClick={ () => props.removeAsset(props.asset) }>
           <span aria-hidden="true" style={style.close_txt}>&times;</span>

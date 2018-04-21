@@ -1,7 +1,7 @@
 import store from './store';
 
 class API {
-  request_assets(token){
+  request_assets(token, callback){
     // get request
     fetch(`/api/v1/assets/user/${token}`)
     .then( resp => resp.json() )
@@ -10,7 +10,8 @@ class API {
         type: "LIST_ASSETS",
         assets: resp.data,
       });
-    });
+    })
+    .then( () => callback && callback() );
   }
 
   lookup_asset(term, callback){

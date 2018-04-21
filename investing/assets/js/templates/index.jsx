@@ -12,7 +12,7 @@ import Alerts from './alerts';
 
 import socket from '../socket';
 
-api.request_assets(window.userToken);
+// api.request_assets(window.userToken);
 
 
 

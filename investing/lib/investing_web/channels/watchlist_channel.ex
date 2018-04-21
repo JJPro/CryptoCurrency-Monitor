@@ -13,6 +13,12 @@ defmodule InvestingWeb.WatchlistChannel do
     end
   end
 
+  def terminate(msg, socket) do
+    IO.puts "connection closed, unsubscribing from all symbols"
+    CoinbaseServer.unsubscribe_all(self)
+    {:shutdown, :closed}
+  end
+
   # # Channels can be used in a request/response fashion
   # # by sending replies to requests from the client
   # def handle_in("ping", payload, socket) do
@@ -20,6 +26,7 @@ defmodule InvestingWeb.WatchlistChannel do
   # end
 
   def handle_in("subscribe", %{"token" => token, "asset" => asset}, socket) do
+    IO.puts "+++++++++++++++ received request for subscription"
     with {:ok, user_id} <- Phoenix.Token.verify(socket, "auth token", token, max_age: 86400) do
       # IO.inspect(asset, label: "================= asset =========\n")
       subscribe(asset["symbol"])

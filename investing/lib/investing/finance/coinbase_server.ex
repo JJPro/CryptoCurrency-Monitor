@@ -23,7 +23,12 @@ defmodule Investing.Finance.CoinbaseServer do
 
   def unsubscribe(symbol, channel) do
     # update server state, deleting channel from symbol's broadcast MapSet
-    WebSockex.cast(__MODULE__, { :del_subscriber, {symbol, channel} } )
+    WebSockex.cast(__MODULE__, { :del_subscriber, {symbol |> IO.inspect(label: "unsubscribing"), channel} } )
+  end
+
+  def unsubscribe_all(channel) do
+    # remove channel from all subscription list
+    WebSockex.cast(__MODULE__, { :del_subscriber_from_all, channel } )
   end
 
   @doc """
@@ -105,6 +110,33 @@ defmodule Investing.Finance.CoinbaseServer do
 
   end
 
+  def handle_cast({ :del_subscriber_from_all, channel }, state) do
+    IO.puts ">>>>> removing channel #{inspect channel} from all subscription lists"
+
+    # update state
+    new_state =
+      state
+      |> Enum.map(fn {symbol, set} -> {symbol, MapSet.delete(set, channel)} end)
+
+    # unsubscribe from gdax when no one is listening on given symbol
+    # loop through state and unsub from those whose set is empty, hence no subscribers
+    empty_symbols =
+      state
+      |> Enum.filter(fn {symbol, set} -> Enum.empty?(set) end)
+      |> Map.keys
+
+    if length(empty_symbols) > 0 do
+      frame = encode_frame(%{
+        type: "unsubscribe",
+        product_ids: empty_symbols,
+        channels: ["ticker"],
+      })
+      {:ok, frame, new_state}
+    else
+      {:ok, new_state}
+    end
+  end
+
   @doc """
   handle_frame(frame, state :: term) ::
   {:ok, new_state} |
@@ -114,22 +146,24 @@ defmodule Investing.Finance.CoinbaseServer do
   check state and broadcast to all channels of the received symbol update
   """
   def handle_frame({type, msg}, state) do
-    # data = Poison.decode!(msg)
+    data = Poison.decode!(msg)
     # |> IO.inspect(label: "received message")
 
-    IO.inspect(state, ">>>>>>>>> state is ")
-    # channels = state
-    # Enum.each(, fun)
+    if data["type"] == "ticker" do
+      # IO.puts "============ recieved data"
 
-    # Enum.each(state[data["product_id"]] |> IO.inspect(label: "========= channel list"), fn(channel) ->
-    #   IO.inspect(channel, "============= KKKKKKKKKK======")
-    #   # msg = {
-    #   #   :update_asset_price,
-    #   #   %{symbol: data["product_id"],
-    #   #   price: data["price"]}
-    #   # }
-    #   # Process.send(channel, msg, [])
-    # end )
+      channels = state[data["product_id"]]
+      # |> IO.inspect(label: "========= channel list")
+      |> Enum.each( fn channel ->
+        msg = {
+          :update_asset_price,
+          %{symbol: data["product_id"],
+            price: data["price"]}
+        }
+
+        is_pid(channel) && Process.alive?(channel) && Process.send(channel, msg, [])
+       end)
+    end
 
     {:ok, state}
   end
