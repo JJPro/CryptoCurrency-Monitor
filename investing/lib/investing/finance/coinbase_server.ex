@@ -3,6 +3,9 @@ defmodule Investing.Finance.CoinbaseServer do
 
 ## Interface
   def start_link do
+
+    Investing.Finance.StockServer.start_link()
+
     WebSockex.start_link("wss://ws-feed.gdax.com" |> IO.inspect(label: ">>>> connecting to:"), __MODULE__, %{}, name: __MODULE__)
     # WebSockex.start_link("ws://tanks.jjpro.me/socket/websocket" |> IO.inspect(label: ">>>> connecting to:"), __MODULE__, state, name: __MODULE__)
   end

@@ -1,6 +1,7 @@
 defmodule InvestingWeb.ActionPanelChannel do
   use InvestingWeb, :channel
   alias Investing.Finance.CoinbaseServer
+  alias Investing.Finance.StockServer
 
   def join(_, payload, socket) do
     if authorized?(payload) do
@@ -20,7 +21,7 @@ defmodule InvestingWeb.ActionPanelChannel do
   # broadcast to everyone in the current topic (action_panel:lobby).
   def handle_in("symbol select", %{"old_symbol" => old_symbol, "new_symbol" => new_symbol, "market" => market, "token" => token}, socket) do
     IO.puts ">>>>> symbol select triggered"
-    # TODO:
+
     # add symbol to server monitor list
     # in server: push "update_current_asset" down the websocket if there is change in price.
     with {:ok, user_id} <- Phoenix.Token.verify(socket, "auth token", token, max_age: 86400) do

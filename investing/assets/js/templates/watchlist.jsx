@@ -4,7 +4,6 @@ import socket from '../socket';
 import api from '../redux/api';
 import store from '../redux/store';
 
-// TODO: may need to transfer to a functional component
 export default connect( state_map )( class Watchlist extends Component {
   constructor(props){
     super(props);
