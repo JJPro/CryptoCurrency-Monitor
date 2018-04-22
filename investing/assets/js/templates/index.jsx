@@ -6,16 +6,11 @@ import store from '../redux/store';
 import api from '../redux/api';
 
 import ActionPanel from './action-panel';
-// import AlertPanel from './alert-panel';
+import AlertPanel from './alert-panel';
 import Watchlist from './watchlist';
 import Alerts from './alerts';
-// import AlertPanel from './alert-panel';
 
 import socket from '../socket';
-
-// api.request_assets(window.userToken);
-
-
 
 export default (root) => {
   render(
@@ -30,6 +25,8 @@ export default (root) => {
 let Index = connect(state => state)( props => {
 
   window.store = store; // TODO for debugging purposes
+  let style = {};
+  
   return (
     <Router>
       <div>
@@ -41,6 +38,7 @@ let Index = connect(state => state)( props => {
           <Route path="/alerts" exact component={Alerts} />
         </Switch>
         <ActionPanel />
+        <AlertPanel />
       </div>
     </Router>
   );

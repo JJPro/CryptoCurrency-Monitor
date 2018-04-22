@@ -39,7 +39,7 @@ export default connect( state_map )( class Watchlist extends Component {
             </thead>
             <tbody>
               {
-                this.props.assets.map( (asset) => <WatchlistEntry asset={ asset } removeAsset={this.removeAsset.bind(this)} key={ asset.id } /> )
+                this.props.assets.map( (asset) => <WatchlistEntry asset={ asset } removeAsset={this.removeAsset.bind(this)} configAlert={this.configAlert.bind(this)} key={ asset.id } /> )
               }
             </tbody>
           </table>
@@ -59,7 +59,7 @@ export default connect( state_map )( class Watchlist extends Component {
     this.channel = socket.channel(`watchlist:${window.userToken}`);
     this.channel.join()
     .receive("ok")
-    .receive("error", resp => { console.log("Unable to join room channel", resp) });
+    .receive("error", resp => { console.log("Unable to join watchlist channel", resp) });
 
     this.channel.on("update_asset_price", (asset) => {
       store.dispatch({
@@ -83,8 +83,13 @@ export default connect( state_map )( class Watchlist extends Component {
     this.channel.push("unsubscribe", {token: window.userToken, asset: asset});
   }
 
-  addAlert(asset) {
-    
+  configAlert(asset) {
+    store.dispatch({
+      type: "SET_ALERT",
+      alert: {symbol: asset.symbol}
+    });
+    document.querySelector('.alert-cover').classList.add("active");
+    document.querySelector('.alert-panel').classList.add("active");
   }
 } );
 
@@ -116,7 +121,7 @@ function WatchlistEntry(props) {
         <button type="button" style={style.close_btn} aria-label="Close" onClick={ () => props.removeAsset(props.asset) }>
           <span aria-hidden="true" style={style.close_txt}>&times;</span>
         </button>
-        <button type="button" className="btn btn-outline-danger btn-sm" style={style.alert_btn} aria-label="Set Alert" onClick={ () => props.addAlert(props.asset) }>
+        <button type="button" className="btn btn-outline-danger btn-sm" style={style.alert_btn} aria-label="Set Alert" onClick={ () => props.configAlert(props.asset) }>
           Alert
         </button>
       </td>

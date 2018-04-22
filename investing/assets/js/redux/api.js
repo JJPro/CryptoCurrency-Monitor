@@ -69,17 +69,55 @@ class API {
     .catch( error => console.log("Error:", error) );
   }
 
-  request_alerts(token){
+  request_alerts(token, callback){
     // get request
+    fetch(`/api/v1/alerts/user/${token}`)
+    .then( resp => resp.json() )
+    .then( resp => {
+      store.dispatch({
+        type: "LIST_ALERTS",
+        alerts: resp.data,
+      });
+    })
+    .then( () => callback && callback() );
   }
 
-  create_alert(token, alert, callback) {
+  add_alert(token, alert, callback) {
     // normal RESTFUL post to :create
-
+    fetch(`/api/v1/alerts`, {
+      method: 'POST',
+      body: JSON.stringify({token, alert}),
+      headers: {'Content-Type': 'application/json'}
+    })
+    .then( resp => resp.json() )
+    .then( resp => {
+      if (resp.data) {
+        store.dispatch({
+          type: "ADD_ALERT",
+          alert: resp.data,
+        });
+        callback && callback();
+      } else {
+        // errors
+      }
+    })
+    .catch( error => console.log("Error:", error) );
   }
 
   delete_alert(token, alert){
     // normal RESTFUL DELETE request
+    fetch(`/api/v1/alerts/${alert.id}`, {
+      method: 'DELETE',
+      body: JSON.stringify({token}),
+      headers: {'Content-Type': 'application/json'}
+    })
+    .then( (resp) => {
+      store.dispatch({
+        type: "DELETE_ALERT",
+        alert_id: alert.id,
+      });
+    })
+    .catch( error => console.log("Error:", error) );
   }
 
 }
