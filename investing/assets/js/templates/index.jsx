@@ -6,6 +6,7 @@ import store from '../redux/store';
 import api from '../redux/api';
 
 import ActionPanel from './action-panel';
+// import AlertPanel from './alert-panel';
 import Watchlist from './watchlist';
 import Alerts from './alerts';
 // import AlertPanel from './alert-panel';
