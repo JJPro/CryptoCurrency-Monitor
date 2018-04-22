@@ -9,7 +9,7 @@ defmodule Investing.Finance.StockServer do
   end
 
   def subscribe(symbol, channel) do
-    IO.puts ">>>>> subscribe to #{symbol}"
+    # IO.puts ">>>>> subscribe to #{symbol}"
     GenServer.cast(__MODULE__, {:add_subscriber, {symbol, channel}})
   end
 
@@ -18,7 +18,7 @@ defmodule Investing.Finance.StockServer do
   end
 
   def unsubscribe(symbol, channel) do
-    IO.puts ">>>>> unsubscribe to #{symbol}"
+    # IO.puts ">>>>> unsubscribe to #{symbol}"
     GenServer.cast(__MODULE__, { :del_subscriber, {symbol, channel} } )
   end
 
@@ -45,19 +45,19 @@ defmodule Investing.Finance.StockServer do
     # check fetched price vs saved price,
     # if diff, send message to channel set of that symbol to update
 
-    Process.send_after(__MODULE__, :auto_update_stocks, 1000)
+    Process.send_after(__MODULE__, :auto_update_stocks, 3000)
 
     # fetch updates
     apikey = "F66HDM3NGB6M7P9A"
-    symbols_str = state |> Map.keys |> Enum.join(",") |> IO.inspect(label: ">>>>> symbols_str")
+    symbols_str = state |> Map.keys |> Enum.join(",") #|> IO.inspect(label: ">>>>> symbols_str")
     url = "https://www.alphavantage.co/query?function=BATCH_STOCK_QUOTES&symbols=#{symbols_str}&apikey=#{apikey}"
 
     if String.length(symbols_str) > 0 do
       quotes =
-        HTTPoison.get!(url) |> IO.inspect(label: ">>>>>>>> API response")
-        |> Map.get(:body) |> IO.inspect(label: ">>>>>>>> response body")
-        |> Poison.decode!() |> IO.inspect(label: ">>>>>>>> response data")
-        |> Map.get("Stock Quotes") |> IO.inspect(label: ">>>>>> quotes")
+        HTTPoison.get!(url) # |> IO.inspect(label: ">>>>>>>> API response")
+        |> Map.get(:body) #|> IO.inspect(label: ">>>>>>>> response body")
+        |> Poison.decode!() #|> IO.inspect(label: ">>>>>>>> response data")
+        |> Map.get("Stock Quotes") #|> IO.inspect(label: ">>>>>> quotes")
 
       # compares differences
       quotes |> Enum.each(fn q ->

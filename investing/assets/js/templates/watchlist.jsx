@@ -18,13 +18,16 @@ export default connect( state_map )( class Watchlist extends Component {
   render(){
 
     let style = {};
+    style.container = {
+      paddingBottom: "131px",
+    };
 
     /**
     * props.assets = [...{symbol, last_price, change, percent_change, market_cap}...]
     ***/
     if (this.props.assets.length){
       return (
-        <div>
+        <div style={style.container}>
           <h2>Watchlist</h2>
           <table className="table">
             <thead>
