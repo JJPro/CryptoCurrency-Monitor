@@ -21,43 +21,25 @@ config :investing, InvestingWeb.Endpoint,
 # Do not print debug messages in production
 config :logger, level: :info
 
-# ## SSL Support
-#
-# To get SSL working, you will need to add the `https` key
-# to the previous section and set your `:url` port to 443:
-#
-#     config :investing, InvestingWeb.Endpoint,
-#       ...
-#       url: [host: "example.com", port: 443],
-#       https: [:inet6,
-#               port: 443,
-#               keyfile: System.get_env("SOME_APP_SSL_KEY_PATH"),
-#               certfile: System.get_env("SOME_APP_SSL_CERT_PATH")]
-#
-# Where those two env variables return an absolute path to
-# the key and cert in disk or a relative path inside priv,
-# for example "priv/ssl/server.key".
-#
-# We also recommend setting `force_ssl`, ensuring no data is
-# ever sent via http, always redirecting to https:
-#
-#     config :investing, InvestingWeb.Endpoint,
-#       force_ssl: [hsts: true]
-#
-# Check `Plug.SSL` for all available options in `force_ssl`.
+config :investing, Investing.Mailer,
+  adapter: Bamboo.SendgridAdapter,
+  api_key: "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"
 
-# ## Using releases
-#
-# If you are doing OTP releases, you need to instruct Phoenix
-# to start the server for all endpoints:
-#
-#     config :phoenix, :serve_endpoints, true
-#
-# Alternatively, you can configure exactly which server to
-# start per endpoint:
-#
-#     config :investing, InvestingWeb.Endpoint, server: true
-#
+
+config :investing, InvestingWeb.Endpoint, server: true
+
+# Add GitHub to your Überauth configuration
+config :ueberauth, Ueberauth,
+  # providers are who can user authenticate with for our application
+  providers: [
+    github: { Ueberauth.Strategy.Github, []}
+  ]
+
+
+# Update your provider configuration
+config :ueberauth, Ueberauth.Strategy.Github.OAuth,
+  client_id: "94ce5989e1edc92d15d6",
+  client_secret: "d14b8d8c4dcec7aa00b5de08aa32bfcd08e5faf3"
 
 # Finally import the config/prod.secret.exs
 # which should be versioned separately.

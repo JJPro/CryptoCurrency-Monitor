@@ -50,6 +50,7 @@ defmodule Investing.Mixfile do
       {:bamboo_smtp, "~> 1.4.0"},
       {:websockex, "~> 0.4.0"},
       {:httpoison, "~> 1.0"},
+      {:distillery, "~> 1.5", runtime: false}
     ]
   end
 
