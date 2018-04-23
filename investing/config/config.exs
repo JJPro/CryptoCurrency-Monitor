@@ -23,11 +23,8 @@ config :logger, :console,
   metadata: [:user_id]
 
 config :investing, Investing.Mailer,
-  adapter: Bamboo.LocalAdapter
-  #adapter: Bamboo.SMTPAdapter,
-  #server: "smtp.domain",
-  #hostname: "your.domain",
-  #port: 1025
+  adapter: Bamboo.SendgridAdapter,
+  api_key: "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"
 
 
 # Import environment specific config. This must remain at the bottom
