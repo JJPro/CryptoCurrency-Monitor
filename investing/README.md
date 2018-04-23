@@ -7,10 +7,10 @@ Server To Client Communication:
     - home page / watchlist [no templates]
     - alerts ( manage alerts, show users where the alerts will be sent )
   - Channel
-    - watchlist channel
-    - alerts channel
+    - ✓ watchlist channel
+    - no alerts channel, alerts gets update through watchlist channel
   - JSON
-    - list of watched assets -> Assets  
+    - list of watched assets -> Assets
     - list of alerts
 
 
@@ -25,7 +25,3 @@ for sockets care about realtime data:
   * implement callback:
    channel.on("update_asset_price", ({symbol, price}) => {})
      ✓ trigger "UPDATE_ASSET_PRICE"
-
-
-
-

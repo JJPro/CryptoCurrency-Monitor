@@ -50,6 +50,9 @@ defmodule InvestingWeb.Router do
     resources "/assets", AssetController, only: [:create, :delete, :show]
     get "/assets/user/:token", AssetController, :index
     get "/assets/lookup/:term", AssetController, :lookup
+
+    resources "/alerts", AlertController, only: [:create, :delete, :show]
+    get "/alerts/user/:token", AlertController, :index
   end
 
   defp put_user_token(conn, _) do

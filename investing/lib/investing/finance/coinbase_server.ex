@@ -5,6 +5,7 @@ defmodule Investing.Finance.CoinbaseServer do
   def start_link do
 
     Investing.Finance.StockServer.start_link()
+    Investing.Finance.AlertNotifyServer.start_link()
 
     WebSockex.start_link("wss://ws-feed.gdax.com" |> IO.inspect(label: ">>>> connecting to:"), __MODULE__, %{}, name: __MODULE__)
     # WebSockex.start_link("ws://tanks.jjpro.me/socket/websocket" |> IO.inspect(label: ">>>> connecting to:"), __MODULE__, state, name: __MODULE__)
@@ -17,11 +18,11 @@ defmodule Investing.Finance.CoinbaseServer do
   """
   def subscribe(symbol, channel) do
     # update server state, adding channel to symbol's broadcast MapSet
-    WebSockex.cast(__MODULE__, { :add_subscriber, {symbol, channel} } )
+    WebSockex.cast(__MODULE__, { :add_subscriber, {symbol, channel |> IO.inspect(label: ">>>>>>> subscriber")} } )
   end
 
   def batch_subscribe(symbols, channel) do
-    WebSockex.cast(__MODULE__, { :batch_subscribe, {symbols, channel} } )
+    WebSockex.cast(__MODULE__, { :batch_subscribe, {symbols, channel |> IO.inspect(label: ">>>>>>> subscriber")} } )
   end
 
   def unsubscribe(symbol, channel) do
@@ -114,7 +115,7 @@ defmodule Investing.Finance.CoinbaseServer do
   end
 
   def handle_cast({ :del_subscriber_from_all, channel }, state) do
-    IO.puts ">>>>> removing channel #{inspect channel} from all subscription lists"
+    IO.puts ">>>>> removing channel #{IO.inspect channel} from all subscription lists"
 
     # update state
     new_state =

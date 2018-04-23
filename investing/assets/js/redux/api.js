@@ -72,7 +72,10 @@ class API {
   request_alerts(token, callback){
     // get request
     fetch(`/api/v1/alerts/user/${token}`)
-    .then( resp => resp.json() )
+    .then( resp => {
+      console.log(">>>>> alerts", resp)
+      return resp.json()
+    } )
     .then( resp => {
       store.dispatch({
         type: "LIST_ALERTS",
@@ -82,11 +85,11 @@ class API {
     .then( () => callback && callback() );
   }
 
-  add_alert(token, alert, callback) {
+  add_alert(token, symbol, condition, callback) {
     // normal RESTFUL post to :create
     fetch(`/api/v1/alerts`, {
       method: 'POST',
-      body: JSON.stringify({token, alert}),
+      body: JSON.stringify({token, symbol, condition}),
       headers: {'Content-Type': 'application/json'}
     })
     .then( resp => resp.json() )

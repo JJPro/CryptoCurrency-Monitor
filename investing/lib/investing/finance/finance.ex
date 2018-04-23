@@ -101,8 +101,8 @@ defmodule Investing.Finance do
   def market(symbol) do
     if symbol in Enum.map(all_crypto_assets, fn c -> c.symbol end) do
       "CryptoCurrency"
-    else 
-      # TODO: query database for market name 
+    else
+      # TODO: query database for market name
       "query database for market name"
     end
   end
@@ -152,5 +152,114 @@ defmodule Investing.Finance do
   """
   def change_asset(%Asset{} = asset) do
     Asset.changeset(asset, %{})
+  end
+
+  alias Investing.Finance.Alert
+
+  @doc """
+  Returns the list of alerts.
+
+  ## Examples
+
+      iex> list_alerts()
+      [%Alert{}, ...]
+
+  """
+  def list_alerts do
+    Repo.all(Alert)
+  end
+
+  def list_alerts_of_user(uid) do
+    Repo.all( from a in Alert,
+              where: a.user_id == ^uid,
+              select: a)
+  end
+
+  def list_active_alerts_with_users do
+    Repo.all( from a in Alert,
+              where: a.expired == false,
+              select: a)
+    |> Repo.preload([:user])
+  end
+
+  @doc """
+  Gets a single alert.
+
+  Raises `Ecto.NoResultsError` if the Alert does not exist.
+
+  ## Examples
+
+      iex> get_alert!(123)
+      %Alert{}
+
+      iex> get_alert!(456)
+      ** (Ecto.NoResultsError)
+
+  """
+  def get_alert!(id), do: Repo.get!(Alert, id)
+
+  @doc """
+  Creates a alert.
+
+  ## Examples
+
+      iex> create_alert(%{field: value})
+      {:ok, %Alert{}}
+
+      iex> create_alert(%{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def create_alert(attrs \\ %{}) do
+    %Alert{}
+    |> Alert.changeset(attrs)
+    |> Repo.insert()
+  end
+
+  @doc """
+  Updates a alert.
+
+  ## Examples
+
+      iex> update_alert(alert, %{field: new_value})
+      {:ok, %Alert{}}
+
+      iex> update_alert(alert, %{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def update_alert(%Alert{} = alert, attrs) do
+    alert
+    |> Alert.changeset(attrs)
+    |> Repo.update()
+  end
+
+  @doc """
+  Deletes a Alert.
+
+  ## Examples
+
+      iex> delete_alert(alert)
+      {:ok, %Alert{}}
+
+      iex> delete_alert(alert)
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def delete_alert(%Alert{} = alert) do
+    Repo.delete(alert)
+  end
+
+  @doc """
+  Returns an `%Ecto.Changeset{}` for tracking alert changes.
+
+  ## Examples
+
+      iex> change_alert(alert)
+      %Ecto.Changeset{source: %Alert{}}
+
+  """
+  def change_alert(%Alert{} = alert) do
+    Alert.changeset(alert, %{})
   end
 end

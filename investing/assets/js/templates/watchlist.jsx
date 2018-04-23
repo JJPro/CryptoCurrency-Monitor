@@ -8,11 +8,14 @@ export default connect( state_map )( class Watchlist extends Component {
   constructor(props){
     super(props);
     this.channelInit();
-    api.request_assets(window.userToken, () => {
+    
+    if (window.userToken){
+      api.request_assets(window.userToken, () => {
         if (store.getState().assets.length > 0)
-          this.channel.push("batch_subscribe", {token: window.userToken, assets: store.getState().assets});
+        this.channel.push("batch_subscribe", {token: window.userToken, assets: store.getState().assets});
 
-    });
+      });
+    }
   }
 
   render(){

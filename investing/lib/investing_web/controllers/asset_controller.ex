@@ -38,9 +38,10 @@ defmodule InvestingWeb.AssetController do
     render(conn, "show.json", asset: asset)
   end
 
-  def delete(conn, %{"id" => id}) do
+  def delete(conn, %{"id" => id, "token" => token}) do
     asset = Finance.get_asset!(id)
-    with {:ok, %Asset{}} <- Finance.delete_asset(asset) do
+    with {:ok, user_id} <- Phoenix.Token.verify(conn, "auth token", token, max_age: 86400),
+         {:ok, %Asset{}} <- Finance.delete_asset(asset) do
       send_resp(conn, :no_content, "")
     end
   end

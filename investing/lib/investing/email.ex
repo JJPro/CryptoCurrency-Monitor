@@ -1,14 +1,16 @@
 defmodule Investing.Email do
   import Bamboo.Email
+  alias Investing.Mailer
 
-  def basic_email do
+  def basic_email(recipient, symbol, condition, price) do
     new_email(
-      from: "no-reply@jjpro.com",
+      from: "no-reply@jjpro.me",
       # need to change
-      to: "jobinamerica1123@gmail.com",
-      subject: "Threshold is exceed",
-      text_body: "The current currency price is beyond your threshold.",
-      html_body: "<p>The current currency price is beyond your threshold.</p>"
+      to: recipient,
+      subject: "MarketWatcher: #{symbol} Threshold is exceed",
+      text_body: "Your limit #{symbol} #{condition} is met. \n Lastest price is $#{price}.",
+      html_body: "<p>Your limit <span style=\"font-weight:bold;color:dodgerblue;\">#{symbol}</span> #{condition} is met.</p><p>Lastest price is $#{price}.</p>"
     )
+    |> Mailer.deliver_now()
   end
 end

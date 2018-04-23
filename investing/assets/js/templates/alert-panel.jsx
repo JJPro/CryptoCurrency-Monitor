@@ -63,7 +63,36 @@ export default connect(state_map)(props => {
   let refs = {};
 
   function submitAlert(alert) {
-    api.add_alert(window.userToken, alert, dismissAlertPanel);
+    /*** NOTE:
+     * This *alert* argument is of structure of
+     * as defined in reducer-alert-panel
+     * It MUST BE converted to format/fields conforming to backend alert schema
+     * before submitting to server
+    **** NOTEEND */
+
+    // validate threshold field
+    if (alert.threshold.trim()){
+      // convert: {symbol, threshold, condition} ==> {symbol, condition}
+      let condition = `${alert.condition} ${alert.threshold}`;
+      api.add_alert(window.userToken, alert.symbol, condition, () => {
+        // TODO: subscribe to real update
+        let channel = socket.channel(`watchlist:${window.userToken}`);
+        channel.join()
+        .receive("ok")
+        .receive("error", resp => { console.log("Unable to join watchlist channel", resp) });
+
+        console.log(">>>>> subscribing to real time update of ", alert.symbol);
+        channel.push("subscribe", {token: window.userToken, asset: {symbol: alert.symbol}});
+        dismissAlertPanel();
+      });
+
+    } else {
+      // threshold is empty, alert by shaking the input box
+      refs.threshold.classList.add("error");
+      refs.threshold.addEventListener("animationend", () => {
+        refs.threshold.classList.remove("error");
+      });
+    }
   }
 
   function dismissAlertPanel() {
@@ -74,7 +103,7 @@ export default connect(state_map)(props => {
   function changeCondition(ev) {
     let condition = ev.target.value;
     store.dispatch({
-      type: "SET_ALERT",
+      type: "UPDATE_ALERT",
       alert: {condition}
     });
   }
@@ -82,7 +111,7 @@ export default connect(state_map)(props => {
   function changeThreshold(ev) {
     let threshold = ev.target.value;
     store.dispatch({
-      type: "SET_ALERT",
+      type: "UPDATE_ALERT",
       alert: {threshold}
     });
   }
@@ -98,7 +127,7 @@ export default connect(state_map)(props => {
             <option value="<">&#60;</option>
           </select>
           <span style={style.dollarsign}>$</span>
-          <input type="number" style={style.input} value={props.alert.threshold} onChange={changeThreshold} />
+          <input className="alert-panel-threshold" type="number" style={style.input} ref={ el => refs.threshold = el } value={props.alert.threshold} onChange={changeThreshold} />
         </div>
         <button className="btn btn-success btn-lg" style={style.submit_button} onClick={ () => submitAlert(props.alert) }>Alert Me</button>
         <p className="description mt-3 text-muted font-weight-light">Alerts will be sent to your email when condition is met.</p>

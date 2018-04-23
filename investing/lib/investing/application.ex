@@ -15,6 +15,7 @@ defmodule Investing.Application do
       # Start your own worker by calling: Investing.Worker.start_link(arg1, arg2, arg3)
       # worker(Investing.Worker, [arg1, arg2, arg3]),
       # worker(Investing.Finance.StockServer, []),
+      # worker(Investing.Finance.AlertNotifyServer, []),
       worker(Investing.Finance.CoinbaseServer, []),
 
     ]

@@ -37,10 +37,7 @@ defmodule InvestingWeb.WatchlistChannel do
   def handle_in("batch_subscribe", %{"token" => token, "assets" => assets}, socket) do
     with {:ok, user_id} <- Phoenix.Token.verify(socket, "auth token", token, max_age: 86400) do
       # IO.inspect(asset, label: "================= asset =========\n")
-      crypto_assets = Enum.filter(assets, fn a -> Finance.market(a["symbol"]) == "CryptoCurrency" end)
-      stock_assets = assets -- crypto_assets
-      CoinbaseServer.batch_subscribe(crypto_assets |> Enum.map(fn a -> a["symbol"] end), self)
-      StockServer.batch_subscribe(stock_assets |> Enum.map(fn a -> a["symbol"] end), self)
+      batch_subscribe(assets)
     end
     {:noreply, socket}
   end
@@ -72,7 +69,7 @@ defmodule InvestingWeb.WatchlistChannel do
     true
   end
 
-  defp subscribe(symbol) do
+  def subscribe(symbol) do
     case Finance.market(symbol) do
       "CryptoCurrency" ->
         CoinbaseServer.subscribe(symbol, self)
@@ -81,12 +78,20 @@ defmodule InvestingWeb.WatchlistChannel do
     end
   end
 
-  defp unsubscribe(symbol) do
+  def unsubscribe(symbol) do
     case Finance.market(symbol) do
       "CryptoCurrency" ->
         CoinbaseServer.unsubscribe(symbol, self)
       _ ->
         StockServer.unsubscribe(symbol, self)
     end
+  end
+
+  def batch_subscribe(assets) do
+    crypto_assets = Enum.filter(assets, fn a -> Finance.market(a["symbol"]) == "CryptoCurrency" end)
+    stock_assets = assets -- crypto_assets
+
+    if length(crypto_assets) > 0, do: CoinbaseServer.batch_subscribe(crypto_assets |> Enum.map(fn a -> a["symbol"] end), self)
+    if length(stock_assets) > 0, do: StockServer.batch_subscribe(stock_assets |> Enum.map(fn a -> a["symbol"] end), self)
   end
 end

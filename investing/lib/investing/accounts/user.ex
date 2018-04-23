@@ -14,6 +14,7 @@ defmodule Investing.Accounts.User do
     field :password_confirmation, :string, virtual: true
 
     has_many :assets, Investing.Finance.Asset
+    has_many :alerts, Investing.Finance.Alert
 
     timestamps()
   end

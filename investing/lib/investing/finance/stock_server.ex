@@ -41,11 +41,11 @@ defmodule Investing.Finance.StockServer do
 
 
   def handle_info(:auto_update_stocks, state) do
-    # fetch stock updates every second,
+    # fetch stock updates every 3 seconds,
     # check fetched price vs saved price,
     # if diff, send message to channel set of that symbol to update
 
-    Process.send_after(__MODULE__, :auto_update_stocks, 3000)
+    Process.send_after(__MODULE__, :auto_update_stocks, 4000)
 
     # fetch updates
     apikey = "F66HDM3NGB6M7P9A"
@@ -54,30 +54,32 @@ defmodule Investing.Finance.StockServer do
 
     if String.length(symbols_str) > 0 do
       quotes =
-        HTTPoison.get!(url) # |> IO.inspect(label: ">>>>>>>> API response")
+        HTTPoison.get!(url) #|> IO.inspect(label: ">>>>>>>> API response")
         |> Map.get(:body) #|> IO.inspect(label: ">>>>>>>> response body")
         |> Poison.decode!() #|> IO.inspect(label: ">>>>>>>> response data")
         |> Map.get("Stock Quotes") #|> IO.inspect(label: ">>>>>> quotes")
 
       # compares differences
-      quotes |> Enum.each(fn q ->
-        with symbol <- q["1. symbol"],
-            {price, channels} <- state[symbol],
-            new_price <- q["2. price"] do
+      if quotes do
+        quotes |> Enum.each(fn q ->
+          with symbol <- q["1. symbol"],
+          {price, channels} <- state[symbol],
+          new_price <- q["2. price"] do
 
-          if price != new_price do
-            state = %{state | symbol => {new_price, channels}}
-            Enum.each(channels, fn channel ->
-              msg = {
-                :update_asset_price,
-                %{symbol: symbol,
+            if price != new_price do
+              state = %{state | symbol => {new_price, channels}}
+              Enum.each(channels, fn channel ->
+                msg = {
+                  :update_asset_price,
+                  %{symbol: symbol,
                   price: new_price}
-              }
-              is_pid(channel) && Process.alive?(channel) && Process.send(channel, msg, [])
-            end)
+                }
+                is_pid(channel) && Process.alive?(channel) && Process.send(channel, msg, [])
+              end)
+            end
           end
-        end
-      end)
+        end)
+      end
     end
     {:noreply, state}
   end

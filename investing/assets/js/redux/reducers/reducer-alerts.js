@@ -29,4 +29,5 @@ let base_alert_obj = {
   price: "--",
   price_color: "black",
   condition: "",
+  expired: false,
 }

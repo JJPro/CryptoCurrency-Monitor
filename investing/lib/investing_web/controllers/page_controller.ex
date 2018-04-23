@@ -10,8 +10,8 @@ defmodule InvestingWeb.PageController do
   def main(conn, _params) do
 
     # Need to change
-    Email.basic_email()
-    |> Mailer.deliver_now()
+    # Email.basic_email()
+    # |> Mailer.deliver_now()
 
     render conn, "main.html"
   end

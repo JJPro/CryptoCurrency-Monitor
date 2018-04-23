@@ -64,4 +64,66 @@ defmodule Investing.FinanceTest do
       assert %Ecto.Changeset{} = Finance.change_asset(asset)
     end
   end
+
+  describe "alerts" do
+    alias Investing.Finance.Alert
+
+    @valid_attrs %{condition: "some condition", symbol: "some symbol"}
+    @update_attrs %{condition: "some updated condition", symbol: "some updated symbol"}
+    @invalid_attrs %{condition: nil, symbol: nil}
+
+    def alert_fixture(attrs \\ %{}) do
+      {:ok, alert} =
+        attrs
+        |> Enum.into(@valid_attrs)
+        |> Finance.create_alert()
+
+      alert
+    end
+
+    test "list_alerts/0 returns all alerts" do
+      alert = alert_fixture()
+      assert Finance.list_alerts() == [alert]
+    end
+
+    test "get_alert!/1 returns the alert with given id" do
+      alert = alert_fixture()
+      assert Finance.get_alert!(alert.id) == alert
+    end
+
+    test "create_alert/1 with valid data creates a alert" do
+      assert {:ok, %Alert{} = alert} = Finance.create_alert(@valid_attrs)
+      assert alert.condition == "some condition"
+      assert alert.symbol == "some symbol"
+    end
+
+    test "create_alert/1 with invalid data returns error changeset" do
+      assert {:error, %Ecto.Changeset{}} = Finance.create_alert(@invalid_attrs)
+    end
+
+    test "update_alert/2 with valid data updates the alert" do
+      alert = alert_fixture()
+      assert {:ok, alert} = Finance.update_alert(alert, @update_attrs)
+      assert %Alert{} = alert
+      assert alert.condition == "some updated condition"
+      assert alert.symbol == "some updated symbol"
+    end
+
+    test "update_alert/2 with invalid data returns error changeset" do
+      alert = alert_fixture()
+      assert {:error, %Ecto.Changeset{}} = Finance.update_alert(alert, @invalid_attrs)
+      assert alert == Finance.get_alert!(alert.id)
+    end
+
+    test "delete_alert/1 deletes the alert" do
+      alert = alert_fixture()
+      assert {:ok, %Alert{}} = Finance.delete_alert(alert)
+      assert_raise Ecto.NoResultsError, fn -> Finance.get_alert!(alert.id) end
+    end
+
+    test "change_alert/1 returns a alert changeset" do
+      alert = alert_fixture()
+      assert %Ecto.Changeset{} = Finance.change_alert(alert)
+    end
+  end
 end
