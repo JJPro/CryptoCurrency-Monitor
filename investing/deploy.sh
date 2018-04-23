@@ -2,7 +2,7 @@
 
 export PORT=5302
 export MIX_ENV=prod
-export GIT_PATH=/home/investing/src/investing
+export GIT_PATH=/home/investing/src/CryptoCurrency-Monitor/investing
 
 PWD=`pwd`
 if [ $PWD != $GIT_PATH ]; then
@@ -36,11 +36,11 @@ if [ -d ~/www/investing ]; then
 fi
 
 mkdir -p ~/www/investing
-REL_TAR=~/src/investing/_build/prod/rel/investing/releases/0.0.1/investing.tar.gz
+REL_TAR=~/src/CryptoCurrency-Monitor/investing/_build/prod/rel/investing/releases/0.0.1/investing.tar.gz
 (cd ~/www/investing && tar xzvf $REL_TAR)
 
 crontab - <<CRONTAB
-@reboot bash /home/investing/src/investing/start.sh
+@reboot bash /home/investing/src/CryptoCurrency-Monitor/investing/start.sh
 CRONTAB
 
 #. start.sh
