@@ -14,14 +14,14 @@ Server To Client Communication:
     - list of alerts
 
 
-Server to Server Communication:
+<!-- Server to Server Communication:
   - WebSockex (Coinbase)
-  - Restful (AlphaVantage)
+  - Restful (AlphaVantage) -->
 
 
 
 
-for sockets care about realtime data:
+<!-- for sockets care about realtime data:
   * implement callback:
    channel.on("update_asset_price", ({symbol, price}) => {})
-     ✓ trigger "UPDATE_ASSET_PRICE"
+     ✓ trigger "UPDATE_ASSET_PRICE" -->

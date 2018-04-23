@@ -21,10 +21,6 @@ config :investing, InvestingWeb.Endpoint,
 # Do not print debug messages in production
 config :logger, level: :info
 
-config :investing, Investing.Mailer,
-  adapter: Bamboo.SendgridAdapter,
-  api_key: "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"
-
 
 config :investing, InvestingWeb.Endpoint, server: true
 
@@ -36,10 +32,6 @@ config :ueberauth, Ueberauth,
   ]
 
 
-# Update your provider configuration
-config :ueberauth, Ueberauth.Strategy.Github.OAuth,
-  client_id: "94ce5989e1edc92d15d6",
-  client_secret: "d14b8d8c4dcec7aa00b5de08aa32bfcd08e5faf3"
 
 # Finally import the config/prod.secret.exs
 # which should be versioned separately.
