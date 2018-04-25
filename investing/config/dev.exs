@@ -53,7 +53,7 @@ config :ueberauth, Ueberauth,
   # providers are who can user authenticate with for our application
   providers: [
     github: { Ueberauth.Strategy.Github, [
-      callback_path: "/auth/github/callback",
+      send_redirect_uri: false,
       ]}
   ]
 # Update your provider configuration
