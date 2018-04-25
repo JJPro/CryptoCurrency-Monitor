@@ -7,27 +7,28 @@ import socket from '../socket';
 export default connect( state_map )( class Alerts extends Component {
   constructor(props) {
     super(props);
-
+    this.channel = props.channel;
     this.channelInit(); // take advantage of watchlist channel to update prices
   }
 
   removeAlert(alert) {
     api.delete_alert(window.userToken, alert, () => {
       // unsub from real-time updates for optimization, but this is trivial
-      if ( ! this.props.alerts.find((a) => a.symbol == alert.symbol) ){
-        this.channel.push("unsubscribe", {token: window.userToken, asset: {symbol: alert.symbol}});
+      let active_alerts = this.props.alerts.filter((a) => !a.expired);
+      if ( ! active_alerts.find((a) => a.symbol == alert.symbol) ){
+        this.channel.push("unsubscribe", {token: window.userToken, alert: alert});
       }
     });
   }
 
   channelInit(){
-    this.channel = socket.channel(`watchlist:${window.userToken}`);
+    this.channel = socket.channel(`alert:${window.userToken}`);
     this.channel.join()
     .receive("ok")
     .receive("error", resp => { console.log("Unable to join watchlist channel from alerts page", resp) });
 
     this.channel.on("update_asset_price", (asset) => {
-      console.log(">>>>> price update", asset.symbol);
+      // console.log(">>>>> price update", asset.symbol);
       store.dispatch({
         type: "UPDATE_ALERT_PRICE",
         alert: asset
@@ -36,8 +37,8 @@ export default connect( state_map )( class Alerts extends Component {
 
     if (window.userToken){
       api.request_alerts(window.userToken, () => {
-        console.log(">>>>>>>>>> pushing batch subscribe");
-        this.channel.push("batch_subscribe", {token: window.userToken, assets: this.props.alerts});
+        // console.log(">>>>>>>>>> pushing batch subscribe");
+        this.channel.push("batch_subscribe", {token: window.userToken, alerts: this.props.alerts.filter((a) => !a.expired)});
       });
     }
   }

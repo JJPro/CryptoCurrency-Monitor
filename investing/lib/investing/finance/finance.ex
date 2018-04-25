@@ -7,6 +7,7 @@ defmodule Investing.Finance do
   alias Investing.Repo
 
   alias Investing.Finance.Asset
+  alias Investing.Finance.{StockServer, CoinbaseServer}
 
   @doc """
   Returns the list of assets.
@@ -64,16 +65,15 @@ defmodule Investing.Finance do
   def lookup_asset(term) do
     # fetch data from gdax and alpha vantage
     lookup_crypto(term) ++ lookup_stock(term)
-    |> IO.inspect(label: ">>>>> stock")
   end
 
   defp lookup_stock(term) do
-    %{body: body, status_code: status_code} = HTTPoison.get!("https://ws-api.iextrading.com/1.0/stock/#{term}/company" |> IO.inspect(label: ">>>> stock query url"))
+    %{body: body, status_code: status_code} = HTTPoison.get!("https://ws-api.iextrading.com/1.0/stock/#{term}/company")
 
     case status_code do
       200 ->
         %{"companyName" => name, "symbol" => symbol, "exchange" => market} = Poison.decode!(body)
-        [%{symbol: symbol, name: name, market: market}] |> IO.inspect(label: ">>>> stock lookup res")
+        [%{symbol: symbol, name: name, market: market}]
       _ -> []
     end
   end
@@ -86,7 +86,6 @@ defmodule Investing.Finance do
       String.contains?(String.downcase(crypto.name), term) ||
       String.contains?(String.downcase(crypto.market), term)
     end)
-    |> IO.inspect(label: ">>>>>>> crypto lookup res")
   end
 
   defp all_crypto_assets do
@@ -261,5 +260,44 @@ defmodule Investing.Finance do
   """
   def change_alert(%Alert{} = alert) do
     Alert.changeset(alert, %{})
+  end
+
+  def subscribe(symbol, channel) do
+    case market(symbol) do
+      "CryptoCurrency" ->
+        CoinbaseServer.subscribe(symbol, channel)
+      _ ->
+        StockServer.subscribe(symbol, channel)
+    end
+  end
+
+  def unsubscribe(symbol, channel) do
+    case market(symbol) do
+      "CryptoCurrency" ->
+        CoinbaseServer.unsubscribe(symbol, channel)
+      _ ->
+        StockServer.unsubscribe(symbol, channel)
+    end
+  end
+
+  def batch_subscribe(symbols, channel) do
+    cryptos = Enum.filter(symbols, fn s -> market(s) == "CryptoCurrency" end)
+    stocks = symbols -- cryptos
+
+    if length(cryptos) > 0, do: CoinbaseServer.batch_subscribe(cryptos, channel)
+    if length(stocks) > 0, do: StockServer.batch_subscribe(stocks, channel)
+  end
+
+  def batch_unsubscribe(symbols, channel) do
+    cryptos = Enum.filter(symbols, fn s -> market(s) == "CryptoCurrency" end)
+    stocks = symbols -- cryptos
+
+    if length(cryptos) > 0, do: CoinbaseServer.batch_unsubscribe(cryptos, channel)
+    if length(stocks) > 0, do: StockServer.batch_unsubscribe(stocks, channel)
+  end
+
+  def unsubscribe_all(channel) do
+    CoinbaseServer.unsubscribe_all(channel)
+    StockServer.unsubscribe_all(channel)
   end
 end

@@ -27,8 +27,10 @@ export default connect( state_map )( class ActionPanel extends Component {
 
   onChangeSymbol(ev) {
     let symbol = ev.target.value;
-    if (symbol)
-      api.lookup_asset(symbol);
+    if (symbol){
+      api.lookup_asset(symbol, () => this.refs.spinner.classList.remove("active"));
+      this.refs.spinner.classList.add("active");
+    }
     else
       store.dispatch({
         type: "CLEAR_PROMPTS"
@@ -36,6 +38,7 @@ export default connect( state_map )( class ActionPanel extends Component {
   }
 
   onKeyDown(ev) {
+    // press esc to clear prompts
     if (ev.keyCode == 27){
       store.dispatch({type: "CLEAR_PROMPTS"});
       ev.target.value = "";
@@ -43,12 +46,16 @@ export default connect( state_map )( class ActionPanel extends Component {
   }
 
   addToWatchlist(){
+    if (!window.userToken){
+      window.location = "/login";
+      return;
+    }
     api.add_asset(window.userToken, this.props.current_asset.symbol, () => {
       /*** db record creation & redux store insertion success, do the following afterwards:
       * 1. subscribe for price update
       */
       let watchlist_channel = this.channel.socket.channels.find( ch => {return ch.topic.includes("watchlist")});
-      watchlist_channel.push("subscribe", {token: window.userToken, asset: this.props.current_asset});
+      if (watchlist_channel) watchlist_channel.push("subscribe", {token: window.userToken, asset: this.props.current_asset});
     });
   }
 
@@ -78,6 +85,14 @@ export default connect( state_map )( class ActionPanel extends Component {
       transform: "translateY(-100%)",
       top: "-1px",
     };
+    style.spinner = {
+      position: "absolute",
+      right: "10px",
+      top: "40%",
+      display: "flex",
+      width: "45px",
+      justifyContent: "space-between",
+    }
 
     /**
     * props.current_asset = {
@@ -89,35 +104,42 @@ export default connect( state_map )( class ActionPanel extends Component {
     */
 
     return (
-      <div className="fixed-bottom container-fluid d-flex justify-content-around align-items-center py-5" style={style.panel}>
-        <div className="mr-5" style={style.search_field_wrapper}>
-          {
-            (() => {
-              if (this.props.current_asset.prompts.length){
-                return (
-                  <div className="dropdown-menu" style={style.dropdown_menu}>
-                    {
-                      this.props.current_asset.prompts.map( (prompt) => {
-                        return <Prompt prompt={prompt} old_symbol={this.props.current_asset.symbol} channel={this.channel} key={prompt.name} />
-                      })
-                    }
-                  </div>
+      <div className="fixed-bottom container-fluid" style={style.panel}>
+        <div className="container d-flex justify-content-around align-items-center py-5">
+          <div className="mr-5" style={style.search_field_wrapper}>
+            {
+              (() => {
+                if (this.props.current_asset.prompts.length){
+                  return (
+                    <div className="dropdown-menu" style={style.dropdown_menu}>
+                      {
+                        this.props.current_asset.prompts.map( (prompt) => {
+                          return <Prompt prompt={prompt} old_symbol={this.props.current_asset.symbol} channel={this.channel} key={prompt.name} />
+                        })
+                      }
+                    </div>
 
-                );
-              }
-            })()
-          }
-          <input type="text" className="form-control" placeholder="Symbol" onChange={ this.onChangeSymbol.bind(this) } onKeyDown={ this.onKeyDown.bind(this) } />
+                  );
+                }
+              })()
+            }
+            <input type="text" className="form-control" placeholder="Symbol" onChange={ this.onChangeSymbol.bind(this) } onKeyDown={ this.onKeyDown.bind(this) } />
+            <div className="spinner" style={style.spinner} ref="spinner" >
+              <div className="bounce1"></div>
+              <div className="bounce2"></div>
+              <div className="bounce3"></div>
+            </div>
+          </div>
+          <div className="mr-5">
+            <span>Symbol: </span>
+            <span style={ style.symbol }> {this.props.current_asset.symbol}</span>
+          </div>
+          <div className="mr-5">
+            <span>Price: </span>
+            <span style={ style.price }>$ {this.props.current_asset.price}</span>
+          </div>
+          <button className="btn btn-info" onClick={ this.addToWatchlist.bind(this) } disabled={ this.props.current_asset.symbol.length == 0 } >Watch</button>
         </div>
-        <div className="mr-5">
-          <span>Symbol: </span>
-          <span style={ style.symbol }> {this.props.current_asset.symbol}</span>
-        </div>
-        <div className="mr-5">
-          <span>Price: </span>
-          <span style={ style.price }>$ {this.props.current_asset.price}</span>
-        </div>
-        <button className="btn btn-info" onClick={ this.addToWatchlist.bind(this) } disabled={ this.props.current_asset.symbol.length == 0 } >Watch</button>
       </div>
     );
   }
@@ -143,6 +165,10 @@ function Prompt(props) {
     // unsubscribe for previous asset's update
     // subscribe for new asset's update
     props.channel.push("symbol select", {old_symbol: props.old_symbol, new_symbol: prompt.symbol, market: prompt.market, token: window.userToken});
+    store.dispatch({
+      type: "SET_CURRENT_ASSET",
+      asset: {symbol: prompt.symbol, market: prompt.market}
+    });
   }
 
   return (

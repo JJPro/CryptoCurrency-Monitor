@@ -3,6 +3,7 @@ defmodule InvestingWeb.UserSocket do
 
   ## Channels
   channel "watchlist:*", InvestingWeb.WatchlistChannel
+  channel "alert:*", InvestingWeb.AlertChannel
   channel "action_panel", InvestingWeb.ActionPanelChannel
 
   ## Transports
@@ -21,12 +22,14 @@ defmodule InvestingWeb.UserSocket do
   # performing token verification on connect.
   def connect(%{"token" => token}, socket) do
     # max_age: 1209600 is equivalent to two weeks in seconds
-    case Phoenix.Token.verify(socket, "auth token", token, max_age: 86400) do
-      {:ok, user_id} ->
-        {:ok, assign(socket, :user, user_id)}
-      {:error, _reason} ->
-        :error
-    end
+    # IO.inspect(token, label: ">>>>>>> token")
+    # case Phoenix.Token.verify(socket, "auth token", token, max_age: 86400) do
+    #   {:ok, user_id} ->
+    #     {:ok, assign(socket, :user, user_id)}
+    #   {:error, _reason} ->
+    #     :error
+    # end
+    {:ok, socket}
   end
 
   # Socket id's are topics that allow you to identify all sockets for a given user:

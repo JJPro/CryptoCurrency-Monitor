@@ -3,9 +3,13 @@ defmodule Investing.Finance.StockServer do
 
 # Public Interface:
   def start_link do
-    GenServer.start_link(__MODULE__, %{}, name: __MODULE__)
-    IO.puts ">>>>> StockServer Started"
+    result = GenServer.start_link(__MODULE__, %{}, name: __MODULE__)
+    # IO.puts ">>>>> StockServer Started"
     Process.send(__MODULE__, :auto_update_stocks, [])
+    # periodically (every 24 hours) pull down company directory data from iex and save to local database,
+    # so that it will speed up company stock lookup
+    # Process.send(__MODULE__, :daily_download_company_directory, [])
+    result
   end
 
   def subscribe(symbol, channel) do
@@ -13,13 +17,17 @@ defmodule Investing.Finance.StockServer do
     GenServer.cast(__MODULE__, {:add_subscriber, {symbol, channel}})
   end
 
+  def unsubscribe(symbol, channel) do
+    # IO.puts ">>>>> unsubscribe to #{symbol}"
+    GenServer.cast(__MODULE__, { :del_subscriber, {symbol, channel} } )
+  end
+
   def batch_subscribe(symbols, channel) do
     GenServer.cast(__MODULE__, { :batch_subscribe, {symbols, channel} } )
   end
 
-  def unsubscribe(symbol, channel) do
-    # IO.puts ">>>>> unsubscribe to #{symbol}"
-    GenServer.cast(__MODULE__, { :del_subscriber, {symbol, channel} } )
+  def batch_unsubscribe(symbols, channel) do
+    GenServer.cast(__MODULE__, { :batch_unsubscribe, {symbols, channel} } )
   end
 
   def unsubscribe_all(channel) do
@@ -30,12 +38,12 @@ defmodule Investing.Finance.StockServer do
 # GenServer Implementations
 
   def init(state) do
-    IO.puts ">>>>> Initializing StockServer"
+    # IO.puts ">>>>> Initializing StockServer"
     {:ok, state}
   end
 
   def terminate(reason, state) do
-    IO.puts ">>>>> Terminating, reason: #{inspect reason}, state: #{inspect state}"
+    # IO.puts ">>>>> Terminating, reason: #{inspect reason}, state: #{inspect state}"
     {:shutdown, state}
   end
 
@@ -48,16 +56,20 @@ defmodule Investing.Finance.StockServer do
     Process.send_after(__MODULE__, :auto_update_stocks, 4000)
 
     # fetch updates
-    apikey = "F66HDM3NGB6M7P9A"
     symbols_str = state |> Map.keys |> Enum.join(",") #|> IO.inspect(label: ">>>>> symbols_str")
+    apikey = "F66HDM3NGB6M7P9A"
     url = "https://www.alphavantage.co/query?function=BATCH_STOCK_QUOTES&symbols=#{symbols_str}&apikey=#{apikey}"
 
     if String.length(symbols_str) > 0 do
       quotes =
-        HTTPoison.get!(url) #|> IO.inspect(label: ">>>>>>>> API response")
-        |> Map.get(:body) #|> IO.inspect(label: ">>>>>>>> response body")
-        |> Poison.decode!() #|> IO.inspect(label: ">>>>>>>> response data")
-        |> Map.get("Stock Quotes") #|> IO.inspect(label: ">>>>>> quotes")
+        with {:ok, resp} <- HTTPoison.get(url, [], timeout: :infinity) do
+          resp
+          |> Map.get(:body) #|> IO.inspect(label: ">>>>>>>> response body")
+          |> Poison.decode!() #|> IO.inspect(label: ">>>>>>>> response data")
+          |> Map.get("Stock Quotes") #|> IO.inspect(label: ">>>>>> quotes")
+        else
+          {:error, _} -> nil
+        end
 
       # compares differences
       if quotes do
@@ -84,6 +96,16 @@ defmodule Investing.Finance.StockServer do
     {:noreply, state}
   end
 
+  @doc """
+  Periodically (every 24 hours) pull down company directory data from iex and save to local database,
+  Hence to speed up company stock lookup process in action-panel
+  """
+  def handle_info(:daily_download_company_directory, state) do
+    Process.send_after(__MODULE__, :daily_download_company_directory, 1000*3600*24)
+
+    {:noreply, state}
+  end
+
   def handle_cast({ :add_subscriber, {symbol, channel} }, state) do
     new_state = if Map.has_key?(state, symbol) do
       with {price, channels} <- state[symbol] do
@@ -91,6 +113,13 @@ defmodule Investing.Finance.StockServer do
       end
     else
       Map.put(state, symbol, {"--", MapSet.new([channel])})
+    end
+    {:noreply, new_state}
+  end
+
+  def handle_cast({ :del_subscriber, {symbol, channel} }, state) do
+    new_state = with {price, channels} <- state[symbol] do
+      %{state | symbol => {price, MapSet.delete(channels, channel)}}
     end
     {:noreply, new_state}
   end
@@ -112,11 +141,22 @@ defmodule Investing.Finance.StockServer do
     {:noreply, new_state}
   end
 
-  def handle_cast({ :del_subscriber, {symbol, channel} }, state) do
-    with {price, channels} <- state[symbol] do
-      new_state = %{state | symbol => {price, MapSet.delete(channels, channel)}}
-      {:noreply, new_state}
-    end
+  def handle_cast({ :batch_unsubscribe, {symbols, channel} }, state) do
+    # remove channel from symbols' subscription list in state
+    new_state = Enum.reduce(
+      symbols,
+      state,
+      fn (s, acc) ->
+        if Map.has_key?(acc, s) do
+          with {price, channels} <- acc[s] do
+            %{acc | s => {price, MapSet.delete(channels, channel)}}
+          end
+        else
+          acc
+        end
+      end
+    )
+    {:noreply, new_state}
   end
 
   def handle_cast({ :del_subscriber_from_all, channel }, state) do
@@ -125,6 +165,7 @@ defmodule Investing.Finance.StockServer do
       |> Enum.map(fn {symbol, {price, channels}} ->
         {symbol, {price, MapSet.delete(channels, channel)}}
       end)
+      |> Enum.into(%{})
     {:noreply, new_state}
   end
 end

@@ -8,11 +8,9 @@ defmodule InvestingWeb.AssetController do
   action_fallback InvestingWeb.FallbackController
 
   def index(conn, %{"token" => token}) do
-    IO.puts ">>>>> index"
-
     # list assets of user
     with {:ok, user_id} <- Phoenix.Token.verify(conn, "auth token", token, max_age: 86400) do
-      assets = Finance.list_assets_of_user(user_id |> IO.inspect(label: ">>>> user_id"))
+      assets = Finance.list_assets_of_user(user_id)
       render(conn, "index.json", assets: assets)
     end
   end
@@ -30,7 +28,7 @@ defmodule InvestingWeb.AssetController do
   def lookup(conn, %{"term" => term}) do
     prompts = Finance.lookup_asset(term)
 
-    render conn, "index.json", prompts: prompts |> IO.inspect(label: ">>>> lookup result")
+    render conn, "index.json", prompts: prompts# |> IO.inspect(label: ">>>> lookup result")
   end
 
   def show(conn, %{"id" => id}) do

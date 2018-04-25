@@ -1,20 +1,15 @@
-<nav class="navbar navbar-expand-lg navbar-dark bg-primary self-navbar">
+<nav class="navbar navbar-dark bg-primary">
 
   <a class="navbar-brand mb-0 h1" href="/">Market Watcher</a>
-  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarColor01" aria-controls="navbarColor01" aria-expanded="false" aria-label="Toggle navigation">
-    <span class="navbar-toggler-icon"></span>
-  </button>
 
-  <div class="collapse navbar-collapse" id="navbarColor01">
 
-    <div class="text-right">
-      <%= if logged_in?(@conn) do %>
-        <span class="badge badge-dark mr-2"><%= current_user(@conn).username %></span>
-        <%= link "Logout", to: session_path(@conn, :delete), method: :get, class: "btn btn-secondary" %>
-      <% else %>
-        <%= link "Login", to: session_path(@conn, :new), class: "btn btn-primary" %>
-        <%= link "Register", to: user_path(@conn, :new), class: "btn btn-secondary" %>
-      <% end %>
-    </div>
+  <div class="text-right">
+    <%= if logged_in?(@conn) do %>
+      <span class="mr-2">Hi, <%= current_user(@conn).username %></span>
+      <%= link "Logout", to: session_path(@conn, :delete), method: :get, class: "btn btn-secondary" %>
+    <% else %>
+      <%= link "Login", to: session_path(@conn, :new), class: "btn btn-primary" %>
+      <%= link "Register", to: user_path(@conn, :new), class: "btn btn-secondary" %>
+    <% end %>
   </div>
 </nav>

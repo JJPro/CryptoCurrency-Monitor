@@ -13,6 +13,8 @@ defmodule InvestingWeb.AlertView do
   def render("alert.json", %{alert: alert}) do
     %{id: alert.id,
       symbol: alert.symbol,
-      condition: alert.condition}
+      condition: alert.condition,
+      expired: alert.expired
+    }
   end
 end

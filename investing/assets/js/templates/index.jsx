@@ -26,13 +26,16 @@ let Index = connect(state => state)( props => {
 
   window.store = store; // TODO for debugging purposes
   let style = {};
-  
+
+  let channels = {};
   return (
     <Router>
       <div>
-        <NavLink to="/" exact >Watchlist </NavLink>
-        |
-        <NavLink to="/alerts" exact > Alerts</NavLink>
+        <div className="my-3">
+          <NavLink to="/" exact >Watchlist </NavLink>
+          |
+          <NavLink to="/alerts" exact > Alerts</NavLink>
+        </div>
         <Switch>
           <Route path="/" exact component={Watchlist} />}
           <Route path="/alerts" exact component={Alerts} />

@@ -32,6 +32,7 @@ class API {
   }
 
   add_asset(token, symbol, callback) {
+    // console.log("token", token);
     // normal RESTFUL post to :create
     fetch(`/api/v1/assets`, {
       method: 'POST',
@@ -73,7 +74,7 @@ class API {
     // get request
     fetch(`/api/v1/alerts/user/${token}`)
     .then( resp => {
-      console.log(">>>>> alerts", resp)
+      // console.log(">>>>> alerts", resp)
       return resp.json()
     } )
     .then( resp => {
@@ -107,7 +108,7 @@ class API {
     .catch( error => console.log("Error:", error) );
   }
 
-  delete_alert(token, alert){
+  delete_alert(token, alert, callback){
     // normal RESTFUL DELETE request
     fetch(`/api/v1/alerts/${alert.id}`, {
       method: 'DELETE',
@@ -119,6 +120,7 @@ class API {
         type: "DELETE_ALERT",
         alert_id: alert.id,
       });
+      callback&& callback();
     })
     .catch( error => console.log("Error:", error) );
   }

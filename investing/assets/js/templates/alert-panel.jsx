@@ -52,7 +52,7 @@ export default connect(state_map)(props => {
     width: "50%",
   };
   style.alert_cover = {
-    position: "absolute", top: 0, left: 0,
+    position: "fixed", top: 0, left: 0,
     width: "100vw",
     height: "100vh",
     background: "rgba(0, 0, 0, .5)",
@@ -81,7 +81,7 @@ export default connect(state_map)(props => {
         .receive("ok")
         .receive("error", resp => { console.log("Unable to join watchlist channel", resp) });
 
-        console.log(">>>>> subscribing to real time update of ", alert.symbol);
+        // console.log(">>>>> subscribing to real time update of ", alert.symbol);
         channel.push("subscribe", {token: window.userToken, asset: {symbol: alert.symbol}});
         dismissAlertPanel();
       });
