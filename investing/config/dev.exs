@@ -48,6 +48,14 @@ config :logger, :console, format: "[$level] $message\n"
 # in production as building large stacktraces may be expensive.
 config :phoenix, :stacktrace_depth, 20
 
+# Add GitHub to your Überauth configuration
+config :ueberauth, Ueberauth,
+  # providers are who can user authenticate with for our application
+  providers: [
+    github: { Ueberauth.Strategy.Github, [
+      callback_path: "/auth/github/callback",
+      ]}
+  ]
 # Update your provider configuration
 config :ueberauth, Ueberauth.Strategy.Github.OAuth,
   client_id: "80e5879b80a21500fb87",

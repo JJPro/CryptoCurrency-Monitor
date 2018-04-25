@@ -28,7 +28,9 @@ config :investing, InvestingWeb.Endpoint, server: true
 config :ueberauth, Ueberauth,
   # providers are who can user authenticate with for our application
   providers: [
-    github: { Ueberauth.Strategy.Github, []}
+    github: { Ueberauth.Strategy.Github, [
+      callback_path: "/auth/github/callback",
+      ]}
   ]
 
 
