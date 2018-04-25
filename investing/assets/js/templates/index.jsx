@@ -24,10 +24,9 @@ export default (root) => {
 
 let Index = connect(state => state)( props => {
 
-  window.store = store; // TODO for debugging purposes
+  window.store = store; // WARNING for debugging purposes
   let style = {};
 
-  let channels = {};
   return (
     <Router>
       <div>

@@ -120,7 +120,7 @@ class API {
         type: "DELETE_ALERT",
         alert_id: alert.id,
       });
-      callback&& callback();
+      callback && callback();
     })
     .catch( error => console.log("Error:", error) );
   }

@@ -4,6 +4,7 @@ import socket from '../socket';
 import api from '../redux/api';
 import store from '../redux/store';
 
+
 export default connect( state_map )( class Watchlist extends Component {
   constructor(props){
     super(props);
@@ -120,7 +121,10 @@ function WatchlistEntry(props) {
       <td style={style.price }>{ props.asset.price }</td>
       <td style={style.actioncell}>
         <button type="button" style={style.close_btn} aria-label="Close" onClick={ () => props.removeAsset(props.asset) }>
-        <span aria-hidden="true" style={style.close_txt}>&times;</span>
+          <svg fill="#000000" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
+    <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+    <path d="M0 0h24v24H0z" fill="none"/>
+</svg>
 
         </button>
         <button type="button" className="" style={style.alert_btn} aria-label="Set Alert" onClick={ () => props.configAlert(props.asset) }>
