@@ -48,6 +48,11 @@ config :logger, :console, format: "[$level] $message\n"
 # in production as building large stacktraces may be expensive.
 config :phoenix, :stacktrace_depth, 20
 
+# Update your provider configuration
+config :ueberauth, Ueberauth.Strategy.Github.OAuth,
+  client_id: "80e5879b80a21500fb87",
+  client_secret: "bccd3da16128e44889d18107a4e5fbbc4ff50064"
+
 # Configure your database
 config :investing, Investing.Repo,
   adapter: Ecto.Adapters.Postgres,
@@ -56,3 +61,5 @@ config :investing, Investing.Repo,
   database: "investing_dev",
   hostname: "localhost",
   pool_size: 10
+
+import_config "shared_api_keys.secret.exs"

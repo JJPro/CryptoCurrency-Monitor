@@ -24,6 +24,7 @@ mix phx.digest
 mix ecto.create
 mix ecto.migrate
 
+mix release.init
 mix release --env=prod
 
 mkdir -p ~/www
