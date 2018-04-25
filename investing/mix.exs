@@ -20,7 +20,7 @@ defmodule Investing.Mixfile do
   def application do
     [
       mod: {Investing.Application, []},
-      extra_applications: [:logger, :runtime_tools, :bamboo, :bamboo_smtp, :httpoison,]
+      extra_applications: [:logger, :runtime_tools, :bamboo, :bamboo_smtp, :httpoison, :ueberauth, :ueberauth_github]
     ]
   end
 
