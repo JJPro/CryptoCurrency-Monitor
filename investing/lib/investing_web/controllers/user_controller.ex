@@ -28,8 +28,15 @@ defmodule InvestingWeb.UserController do
   end
 
   def show(conn, %{"id" => id}) do
-    user = Accounts.get_user!(id)
-    render(conn, "show.html", user: user)
+    cond do
+      conn.assigns.current_user.id == id |> String.to_integer ->
+        user = Accounts.get_user!(id)
+        render(conn, "show.html", user: user)
+      true ->
+        conn
+        |> put_flash(:error, "Please be a nice citizen!")
+        |> redirect(to: page_path(conn, :index))
+    end
   end
 
   def edit(conn, %{"id" => id}) do
