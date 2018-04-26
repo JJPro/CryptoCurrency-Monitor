@@ -70,4 +70,5 @@ config :investing, Investing.Repo,
   hostname: "localhost",
   pool_size: 10
 
+import_config "dev.secret.exs"
 import_config "shared_api_keys.secret.exs"

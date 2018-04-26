@@ -22,7 +22,7 @@ defmodule InvestingWeb.Router do
     get "/alerts", PageController, :index
     # get "/main", PageController, :main
 
-    resources "/users", UserController
+    resources "/users", UserController, except: [:index]
 
     get "/login", SessionController, :new
     post "/login", SessionController, :create

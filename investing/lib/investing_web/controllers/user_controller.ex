@@ -4,6 +4,8 @@ defmodule InvestingWeb.UserController do
   alias Investing.Accounts
   alias Investing.Accounts.User
 
+  plug InvestingWeb.Plugs.RequireAuth when action in [:new, :edit, :update, :delete, :show]
+
   def index(conn, _params) do
     users = Accounts.list_users()
     render(conn, "index.html", users: users)
@@ -31,9 +33,16 @@ defmodule InvestingWeb.UserController do
   end
 
   def edit(conn, %{"id" => id}) do
-    user = Accounts.get_user!(id)
-    changeset = Accounts.change_user(user)
-    render(conn, "edit.html", user: user, changeset: changeset)
+    cond do
+      conn.assigns.current_user.id == id |> String.to_integer ->
+        user = Accounts.get_user!(id)
+        changeset = Accounts.change_user(user)
+        render(conn, "edit.html", user: user, changeset: changeset)
+      true ->
+        conn
+        |> put_flash(:error, "Please be a nice citizen!")
+        |> redirect(to: page_path(conn, :index))
+    end
   end
 
   def update(conn, %{"id" => id, "user" => user_params}) do
