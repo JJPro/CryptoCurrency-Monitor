@@ -126,4 +126,138 @@ defmodule Investing.FinanceTest do
       assert %Ecto.Changeset{} = Finance.change_alert(alert)
     end
   end
+
+  describe "orders" do
+    alias Investing.Finance.Order
+
+    @valid_attrs %{action: "some action", expired: true, quantity: 42, stoploss: 120.5, symbol: "some symbol", target: 120.5}
+    @update_attrs %{action: "some updated action", expired: false, quantity: 43, stoploss: 456.7, symbol: "some updated symbol", target: 456.7}
+    @invalid_attrs %{action: nil, expired: nil, quantity: nil, stoploss: nil, symbol: nil, target: nil}
+
+    def order_fixture(attrs \\ %{}) do
+      {:ok, order} =
+        attrs
+        |> Enum.into(@valid_attrs)
+        |> Finance.create_order()
+
+      order
+    end
+
+    test "list_orders/0 returns all orders" do
+      order = order_fixture()
+      assert Finance.list_orders() == [order]
+    end
+
+    test "get_order!/1 returns the order with given id" do
+      order = order_fixture()
+      assert Finance.get_order!(order.id) == order
+    end
+
+    test "create_order/1 with valid data creates a order" do
+      assert {:ok, %Order{} = order} = Finance.create_order(@valid_attrs)
+      assert order.action == "some action"
+      assert order.expired == true
+      assert order.quantity == 42
+      assert order.stoploss == 120.5
+      assert order.symbol == "some symbol"
+      assert order.target == 120.5
+    end
+
+    test "create_order/1 with invalid data returns error changeset" do
+      assert {:error, %Ecto.Changeset{}} = Finance.create_order(@invalid_attrs)
+    end
+
+    test "update_order/2 with valid data updates the order" do
+      order = order_fixture()
+      assert {:ok, order} = Finance.update_order(order, @update_attrs)
+      assert %Order{} = order
+      assert order.action == "some updated action"
+      assert order.expired == false
+      assert order.quantity == 43
+      assert order.stoploss == 456.7
+      assert order.symbol == "some updated symbol"
+      assert order.target == 456.7
+    end
+
+    test "update_order/2 with invalid data returns error changeset" do
+      order = order_fixture()
+      assert {:error, %Ecto.Changeset{}} = Finance.update_order(order, @invalid_attrs)
+      assert order == Finance.get_order!(order.id)
+    end
+
+    test "delete_order/1 deletes the order" do
+      order = order_fixture()
+      assert {:ok, %Order{}} = Finance.delete_order(order)
+      assert_raise Ecto.NoResultsError, fn -> Finance.get_order!(order.id) end
+    end
+
+    test "change_order/1 returns a order changeset" do
+      order = order_fixture()
+      assert %Ecto.Changeset{} = Finance.change_order(order)
+    end
+  end
+
+  describe "holdings" do
+    alias Investing.Finance.Holding
+
+    @valid_attrs %{bought_at: 120.5, quantity: 42, symbol: "some symbol"}
+    @update_attrs %{bought_at: 456.7, quantity: 43, symbol: "some updated symbol"}
+    @invalid_attrs %{bought_at: nil, quantity: nil, symbol: nil}
+
+    def holding_fixture(attrs \\ %{}) do
+      {:ok, holding} =
+        attrs
+        |> Enum.into(@valid_attrs)
+        |> Finance.create_holding()
+
+      holding
+    end
+
+    test "list_holdings/0 returns all holdings" do
+      holding = holding_fixture()
+      assert Finance.list_holdings() == [holding]
+    end
+
+    test "get_holding!/1 returns the holding with given id" do
+      holding = holding_fixture()
+      assert Finance.get_holding!(holding.id) == holding
+    end
+
+    test "create_holding/1 with valid data creates a holding" do
+      assert {:ok, %Holding{} = holding} = Finance.create_holding(@valid_attrs)
+      assert holding.bought_at == 120.5
+      assert holding.quantity == 42
+      assert holding.symbol == "some symbol"
+    end
+
+    test "create_holding/1 with invalid data returns error changeset" do
+      assert {:error, %Ecto.Changeset{}} = Finance.create_holding(@invalid_attrs)
+    end
+
+    test "update_holding/2 with valid data updates the holding" do
+      holding = holding_fixture()
+      assert {:ok, holding} = Finance.update_holding(holding, @update_attrs)
+      assert %Holding{} = holding
+      assert holding.bought_at == 456.7
+      assert holding.quantity == 43
+      assert holding.symbol == "some updated symbol"
+    end
+
+    test "update_holding/2 with invalid data returns error changeset" do
+      holding = holding_fixture()
+      assert {:error, %Ecto.Changeset{}} = Finance.update_holding(holding, @invalid_attrs)
+      assert holding == Finance.get_holding!(holding.id)
+    end
+
+    test "delete_holding/1 deletes the holding" do
+      holding = holding_fixture()
+      assert {:ok, %Holding{}} = Finance.delete_holding(holding)
+      assert_raise Ecto.NoResultsError, fn -> Finance.get_holding!(holding.id) end
+    end
+
+    test "change_holding/1 returns a holding changeset" do
+      holding = holding_fixture()
+      assert %Ecto.Changeset{} = Finance.change_holding(holding)
+    end
+  end
 end

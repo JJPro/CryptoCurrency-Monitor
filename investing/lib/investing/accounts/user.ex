@@ -15,6 +15,8 @@ defmodule Investing.Accounts.User do
 
     has_many :assets, Investing.Finance.Asset
     has_many :alerts, Investing.Finance.Alert
+    has_many :orders, Investing.Finance.Order
+    has_many :holdings, Investing.Finance.Holding
 
     timestamps()
   end

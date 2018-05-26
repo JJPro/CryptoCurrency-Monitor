@@ -19,7 +19,11 @@
 
 // import socket from "./socket";
 
+import "bootstrap";
+
 import app_init from './templates/index';
 $(() => {
   app_init(document.querySelector('#root'));
+  // enable bootstrap tooltips
+  $('[data-toggle="tooltip"]').tooltip();
 });

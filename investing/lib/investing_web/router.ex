@@ -47,6 +47,9 @@ defmodule InvestingWeb.Router do
   scope "/api/v1", InvestingWeb do
     pipe_through :api
 
+    resources "/orders", OrderController, except: [:new, :edit]
+    resources "/holdings", HoldingController, except: [:new, :edit]
+
     resources "/assets", AssetController, only: [:create, :delete, :show]
     get "/assets/user/:token", AssetController, :index
     get "/assets/lookup/:term", AssetController, :lookup

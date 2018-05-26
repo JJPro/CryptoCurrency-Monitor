@@ -300,4 +300,196 @@ defmodule Investing.Finance do
     CoinbaseServer.unsubscribe_all(channel)
     StockServer.unsubscribe_all(channel)
   end
+
+  alias Investing.Finance.Order
+
+  @doc """
+  Returns the list of orders.
+
+  ## Examples
+
+      iex> list_orders()
+      [%Order{}, ...]
+
+  """
+  def list_orders do
+    Repo.all(Order)
+  end
+
+  @doc """
+  Gets a single order.
+
+  Raises `Ecto.NoResultsError` if the Order does not exist.
+
+  ## Examples
+
+      iex> get_order!(123)
+      %Order{}
+
+      iex> get_order!(456)
+      ** (Ecto.NoResultsError)
+
+  """
+  def get_order!(id), do: Repo.get!(Order, id)
+
+  @doc """
+  Creates a order.
+
+  ## Examples
+
+      iex> create_order(%{field: value})
+      {:ok, %Order{}}
+
+      iex> create_order(%{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def create_order(attrs \\ %{}) do
+    %Order{}
+    |> Order.changeset(attrs)
+    |> Repo.insert()
+  end
+
+  @doc """
+  Updates a order.
+
+  ## Examples
+
+      iex> update_order(order, %{field: new_value})
+      {:ok, %Order{}}
+
+      iex> update_order(order, %{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def update_order(%Order{} = order, attrs) do
+    order
+    |> Order.changeset(attrs)
+    |> Repo.update()
+  end
+
+  @doc """
+  Deletes a Order.
+
+  ## Examples
+
+      iex> delete_order(order)
+      {:ok, %Order{}}
+
+      iex> delete_order(order)
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def delete_order(%Order{} = order) do
+    Repo.delete(order)
+  end
+
+  @doc """
+  Returns an `%Ecto.Changeset{}` for tracking order changes.
+
+  ## Examples
+
+      iex> change_order(order)
+      %Ecto.Changeset{source: %Order{}}
+
+  """
+  def change_order(%Order{} = order) do
+    Order.changeset(order, %{})
+  end
+
+  alias Investing.Finance.Holding
+
+  @doc """
+  Returns the list of holdings.
+
+  ## Examples
+
+      iex> list_holdings()
+      [%Holding{}, ...]
+
+  """
+  def list_holdings do
+    Repo.all(Holding)
+  end
+
+  @doc """
+  Gets a single holding.
+
+  Raises `Ecto.NoResultsError` if the Holding does not exist.
+
+  ## Examples
+
+      iex> get_holding!(123)
+      %Holding{}
+
+      iex> get_holding!(456)
+      ** (Ecto.NoResultsError)
+
+  """
+  def get_holding!(id), do: Repo.get!(Holding, id)
+
+  @doc """
+  Creates a holding.
+
+  ## Examples
+
+      iex> create_holding(%{field: value})
+      {:ok, %Holding{}}
+
+      iex> create_holding(%{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def create_holding(attrs \\ %{}) do
+    %Holding{}
+    |> Holding.changeset(attrs)
+    |> Repo.insert()
+  end
+
+  @doc """
+  Updates a holding.
+
+  ## Examples
+
+      iex> update_holding(holding, %{field: new_value})
+      {:ok, %Holding{}}
+
+      iex> update_holding(holding, %{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def update_holding(%Holding{} = holding, attrs) do
+    holding
+    |> Holding.changeset(attrs)
+    |> Repo.update()
+  end
+
+  @doc """
+  Deletes a Holding.
+
+  ## Examples
+
+      iex> delete_holding(holding)
+      {:ok, %Holding{}}
+
+      iex> delete_holding(holding)
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def delete_holding(%Holding{} = holding) do
+    Repo.delete(holding)
+  end
+
+  @doc """
+  Returns an `%Ecto.Changeset{}` for tracking holding changes.
+
+  ## Examples
+
+      iex> change_holding(holding)
+      %Ecto.Changeset{source: %Holding{}}
+
+  """
+  def change_holding(%Holding{} = holding) do
+    Holding.changeset(holding, %{})
+  end
 end

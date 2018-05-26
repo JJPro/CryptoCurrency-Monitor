@@ -94,6 +94,12 @@ export default connect( state_map )( class ActionPanel extends Component {
       justifyContent: "space-between",
     }
 
+    let loading_indicator = <div className="spinner" style={style.spinner} ref="spinner" >
+      <div className="bounce1"></div>
+      <div className="bounce2"></div>
+      <div className="bounce3"></div>
+    </div>;
+
     /**
     * props.current_asset = {
     symbol: string,
@@ -124,11 +130,7 @@ export default connect( state_map )( class ActionPanel extends Component {
               })()
             }
             <input type="text" className="form-control" placeholder="Symbol" onChange={ this.onChangeSymbol.bind(this) } onKeyDown={ this.onKeyDown.bind(this) } />
-            <div className="spinner" style={style.spinner} ref="spinner" >
-              <div className="bounce1"></div>
-              <div className="bounce2"></div>
-              <div className="bounce3"></div>
-            </div>
+            { loading_indicator }
           </div>
           <div className="mr-5">
             <span>Symbol: </span>
@@ -137,6 +139,18 @@ export default connect( state_map )( class ActionPanel extends Component {
           <div className="mr-5">
             <span>Price: </span>
             <span style={ style.price }>$ {this.props.current_asset.price}</span>
+          </div>
+          <div className="mr-5">
+            <span>Target: </span>
+            <input style={ style.target } value={this.props.current_asset.target} />
+          </div>
+          <div className="mr-5">
+            <span>Quantity: </span>
+            <input style={ style.quantity } value={this.props.current_asset.quantity} />
+          </div>
+          <div className="mr-5">
+            <span>Stop Loss: </span>
+            <input style={ style.stoploss } value={this.props.current_asset.stoploss} data-toggle="tooltip" title="only applicable to buy order" data-placement="bottom" />
           </div>
           <button className="btn btn-info" onClick={ this.addToWatchlist.bind(this) } disabled={ this.props.current_asset.symbol.length == 0 } >Watch</button>
         </div>
