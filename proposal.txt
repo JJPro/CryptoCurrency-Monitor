@@ -2,6 +2,7 @@ CS 5610 Project 2 Proposal
 Student 1: Jialin Gao
 Student 2: Xiangshi Sun
 Student 3: Lu Ji
+Principal Engineer: Lu Ji
 
 
 Currency Price Monitoring
@@ -43,11 +44,11 @@ page for users to use their predefined amount of balance to make simulated
 trades and view their virtual earnings/losses so as to practice their
 investment skills.
 
-几个必有功能：
-1. 查看数字货币 股票的实时价格, 每个人自己的收藏夹：可以收藏几种数字货币 股票资产，从而实现第二个要求 ->
-2. set thresholds to get email price alert && get email alert when user's 收藏的资产之间有套利 arbitrage 机会, （几个资产倒腾一下就能挣钱）
-3. paper trading 模拟交易，给用户一笔假钱，可以让用户实时购买／卖出 股票 数字货币, 黄金原油等商品，然后实时计算balance 绘制图标，
-4. 查看某 股票／数字货币／黄金原油等商品 之前1天 1周 1个月 3个月 半年 1年 2年 3年 5年的价格周期表。。这个还可以，不难，因为不是实时更新数据
-5. API 要好好挑
-6. redux / react ／ GenServer / Phoenix Channels / OAuth / HTTPS / PostgreSQL
-7. API: Coinbase / Alpha Vantage / Intrinio
+Key Features：
+1. Realtime monitor of cryptocurrencies and stock assets
+2. set thresholds to get email alerts
+3. paper trading support
+
+Technologies Involved:
+1. Redux / React ／ GenServer / Phoenix Channels / OAuth / HTTPS / PostgreSQL
+2. API: Coinbase / Alpha Vantage / Intrinio
