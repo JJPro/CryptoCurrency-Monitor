@@ -52,7 +52,7 @@ defmodule InvestingWeb.WatchlistChannel do
     {:noreply, socket}
   end
 
-  def handle_info({:update_asset_price, asset}, socket) do
+  def handle_info({:price_updated, asset}, socket) do
     # IO.puts ">>>>>> received update"
     push(socket, "update_asset_price", asset)
     {:noreply, socket}

@@ -74,21 +74,20 @@ defmodule Investing.Finance.StockServer do
       # compares differences
       if quotes do
         quotes |> Enum.each(fn q ->
-          with symbol <- q["1. symbol"],
-          {price, channels} <- state[symbol],
-          new_price <- q["2. price"] do
+          symbol = q["1. symbol"]
+          {price, channels} = state[symbol]
+          new_price = q["2. price"]
 
-            if price != new_price do
-              state = %{state | symbol => {new_price, channels}}
-              Enum.each(channels, fn channel ->
-                msg = {
-                  :update_asset_price,
-                  %{symbol: symbol,
-                  price: new_price}
-                }
-                is_pid(channel) && Process.alive?(channel) && Process.send(channel, msg, [])
-              end)
-            end
+          if price != new_price do
+            state = %{state | symbol => {new_price, channels}}
+            Enum.each(channels, fn channel ->
+              msg = {
+                :price_updated,
+                %{symbol: symbol,
+                price: new_price}
+              }
+              is_pid(channel) && Process.alive?(channel) && Process.send(channel, msg, [])
+            end)
           end
         end)
       end

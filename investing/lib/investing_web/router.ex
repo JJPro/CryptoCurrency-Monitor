@@ -20,6 +20,7 @@ defmodule InvestingWeb.Router do
 
     get "/", PageController, :index
     get "/alerts", PageController, :index
+    get "/portfolio", PageController, :index
     # get "/main", PageController, :main
 
     resources "/users", UserController, except: [:index]

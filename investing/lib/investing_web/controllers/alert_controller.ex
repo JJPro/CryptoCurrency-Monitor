@@ -3,7 +3,7 @@ defmodule InvestingWeb.AlertController do
 
   alias Investing.Finance
   alias Investing.Finance.Alert
-  alias Investing.Finance.AlertNotifyServer
+  alias Investing.Finance.AlertManager
 
   action_fallback InvestingWeb.FallbackController
 
@@ -20,7 +20,8 @@ defmodule InvestingWeb.AlertController do
     with {:ok, user_id} <- Phoenix.Token.verify(conn, "auth token", token, max_age: 86400),
          {:ok, %Alert{} = alert} <- Finance.create_alert(%{symbol: symbol, condition: condition, user_id: user_id}) do
 
-      AlertNotifyServer.reload_alerts()
+      IO.inspect(alert, label: ">>>> adding alert in alert_controller: create()")
+      AlertManager.add_alert(alert) # add new alert to alert manager
       conn
       |> put_status(:created)
       |> put_resp_header("location", alert_path(conn, :show, alert))
@@ -33,11 +34,27 @@ defmodule InvestingWeb.AlertController do
     render(conn, "show.json", alert: alert)
   end
 
+  @doc """
+  Triggered by manually deleting an alert.
+
+  WARNING
+  needs to check if the alert is expired or not.
+  If alert is still active, then it exists both in database and the alert service,
+  therefore need to be removed in both places.
+  Otherwise, simply remove it from database.
+  """
   def delete(conn, %{"id" => id, "token" => token}) do
     alert = Finance.get_alert!(id)
     with {:ok, user_id} <- Phoenix.Token.verify(conn, "auth token", token, max_age: 86400),
-         {:ok, %Alert{}} <- Finance.delete_alert(alert) do
-      AlertNotifyServer.reload_alerts()
+         {:ok, %Alert{}} <- Finance.delete_alert(alert) do # remove from database
+      # check expiration status of the alert, and need to delete it from alert manager if still active.
+
+      IO.inspect(alert.expired, label: '>>>> is alert expired')
+      if not alert.expired do
+        IO.puts ">>>> next step is to delete this active alert"
+        AlertManager.del_alert(alert)
+      end
+
       send_resp(conn, :no_content, "")
     end
   end

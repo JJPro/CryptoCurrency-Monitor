@@ -29,7 +29,7 @@ defmodule InvestingWeb.ActionPanelChannel do
     {:noreply, socket}
   end
 
-  def handle_info({:update_asset_price, asset}, socket) do
+  def handle_info({:price_updated, asset}, socket) do
     push(socket, "update_current_asset", asset)
     {:noreply, socket}
   end

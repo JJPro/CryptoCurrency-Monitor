@@ -194,7 +194,7 @@ defmodule Investing.Finance.CoinbaseServer do
       # |> IO.inspect(label: "========= channel list")
       |> Enum.each( fn channel ->
         msg = {
-          :update_asset_price,
+          :price_updated,
           %{symbol: data["product_id"],
             price: data["price"]}
         }

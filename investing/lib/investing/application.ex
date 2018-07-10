@@ -16,7 +16,9 @@ defmodule Investing.Application do
       # worker(Investing.Worker, [arg1, arg2, arg3]),
       worker(Investing.Finance.StockServer, []),
       worker(Investing.Finance.CoinbaseServer, []),
-      worker(Investing.Finance.AlertNotifyServer, []),
+      worker(Investing.Finance.ThresholdManager, []),
+      worker(Investing.Finance.AlertManager, []),
+      # worker(Investing.Finance.OrderManager, []),
 
     ]
 

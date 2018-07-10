@@ -34,7 +34,7 @@ defmodule InvestingWeb.AlertChannel do
     {:noreply, socket}
   end
 
-  def handle_info({:update_asset_price, data}, socket) do
+  def handle_info({:price_updated, data}, socket) do
     # IO.puts ">>>>>> received update"
     push(socket, "update_asset_price", data)
     {:noreply, socket}

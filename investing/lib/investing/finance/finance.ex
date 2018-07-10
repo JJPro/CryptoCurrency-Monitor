@@ -210,7 +210,7 @@ defmodule Investing.Finance do
 
   """
   def create_alert(attrs \\ %{}) do
-    %Alert{}
+    %Alert{expired: false}
     |> Alert.changeset(attrs)
     |> Repo.insert()
   end
