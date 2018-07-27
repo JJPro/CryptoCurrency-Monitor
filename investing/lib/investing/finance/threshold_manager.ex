@@ -126,7 +126,7 @@ defmodule Investing.Finance.ThresholdManager do
         end
         # return false if threshold is both met and being transient.
         # otherwise return true.
-        remove? |> IO.inspect(label: ">>> removing this entry? ")# step 2.
+        remove? # step 2.
       end)
 
       # IO.inspect(new_thresholds, label: "new thresholds after price update")

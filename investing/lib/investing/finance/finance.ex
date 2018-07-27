@@ -8,6 +8,8 @@ defmodule Investing.Finance do
 
   alias Investing.Finance.Asset
   alias Investing.Finance.{StockServer, CoinbaseServer}
+  alias Investing.Accounts
+  alias Investing.Accounts.User
 
   @doc """
   Returns the list of assets.
@@ -316,6 +318,12 @@ defmodule Investing.Finance do
     Repo.all(Order)
   end
 
+  def list_active_orders do
+    Repo.all( from o in Order,
+              where: o.expired == false,
+              select: o)
+  end
+
   @doc """
   Gets a single order.
 
@@ -428,6 +436,10 @@ defmodule Investing.Finance do
   """
   def get_holding!(id), do: Repo.get!(Holding, id)
 
+  def get_holding_ do
+
+  end
+
   @doc """
   Creates a holding.
 
@@ -491,5 +503,32 @@ defmodule Investing.Finance do
   """
   def change_holding(%Holding{} = holding) do
     Holding.changeset(holding, %{})
+  end
+
+  @doc """
+  Updates user account balance.
+
+  ## Parameters
+    - user: user id or user object
+    - action: :add or :subtract
+    - amount: float  The amount of money to add or subtract
+  """
+  @spec update_user_balance(integer | %User{}, atom(), float()) :: boolean()
+  def update_user_balance(%User{} = user, action, amount) do
+    balance = case action do
+      :add ->
+        user.balance + amount
+      :subtract ->
+        user.balance - amount
+    end  # get new balance value
+
+    # update user with new balance
+    from(u in User, update: [set: [balance: ^balance]], where: u.id == ^user.id)
+    |> Repo.update_all([]) # lookup `h Repo.update_all for usage`
+
+  end
+  def update_user_balance(user_id, action, amount) when is_number(user_id) do
+    user = Accounts.get_user!(user_id)
+    update_user_balance(user, action, amount)
   end
 end

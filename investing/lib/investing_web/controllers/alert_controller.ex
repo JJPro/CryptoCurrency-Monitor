@@ -50,7 +50,7 @@ defmodule InvestingWeb.AlertController do
       # check expiration status of the alert, and need to delete it from alert manager if still active.
 
       IO.inspect(alert.expired, label: '>>>> is alert expired')
-      if not alert.expired do
+      if ! alert.expired do
         IO.puts ">>>> next step is to delete this active alert"
         AlertManager.del_alert(alert)
       end

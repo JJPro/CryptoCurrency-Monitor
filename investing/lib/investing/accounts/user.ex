@@ -9,6 +9,7 @@ defmodule Investing.Accounts.User do
     field :email, :string
     field :password_hash, :string
     field :username, :string
+    field :balance, :float
     ## Virtual Fields ##
     field :password, :string, virtual: true
     field :password_confirmation, :string, virtual: true
@@ -24,7 +25,7 @@ defmodule Investing.Accounts.User do
   @doc false
   def changeset(user, attrs) do
     user
-    |> cast(attrs, [:username, :email, :password])
+    |> cast(attrs, [:username, :email, :password, :balance])
     |> validate_required([:username, :email, :password])
     |> unique_constraint(:email)
     |> validate_format(:email, ~r/@/)

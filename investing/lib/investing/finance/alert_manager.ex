@@ -6,6 +6,7 @@ defmodule Investing.Finance.AlertManager do
   alias Investing.Finance
   alias Investing.Finance.ThresholdManager
   alias Investing.Repo
+  alias Investing.Utils.Actions
 
 # Public Interface:
   def start_link do
@@ -40,7 +41,11 @@ defmodule Investing.Finance.AlertManager do
   @doc """
   1. setup server state, loads active alerts from database.
   2. subscribe to threshold_manager service.
+
+  ## Returns
+    - {:ok, [list of active alerts]}
   """
+  @spec init(List.t()) :: {:ok, List.t()}
   def init(_state) do
     # IO.puts ">>>>> Initializing AlertManager"
     # fetch all active alerts
@@ -85,6 +90,7 @@ defmodule Investing.Finance.AlertManager do
         # mark alert as expired
         Finance.update_alert(alert, %{expired: true})
 
+        Actions.do_action :alert_sent, alert: alert, price: price, condition: condition
 
         IO.puts(">>>>> marked alert as expire, and removing it from server state")
         true # remove alert from state, return true to reject it out
@@ -113,7 +119,7 @@ defmodule Investing.Finance.AlertManager do
   @doc """
   delete an alert from the system, needs to do the following:
   1. remove this alert from server state; ✅
-  2. unsubscribe from threshold service if this is no alerts of the same condition and symbol ✅
+  2. unsubscribe from threshold service if there is no alerts of the same condition and symbol ✅
   """
   def handle_cast({:del_alert, alert}, state) do
     IO.inspect(state, label: ">>>>> original state ")
