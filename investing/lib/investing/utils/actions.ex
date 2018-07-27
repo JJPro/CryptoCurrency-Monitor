@@ -4,10 +4,9 @@ defmodule Investing.Utils.Actions do
   Provides utility functions to operate on action hooks.
 
   ## Available Actions:
-    - :order_expired, callback/1 format: (order: order, price: current_price, condition: condition_string) -> nil
-      called after order is realized.
+    - :order_executed, callback/1 format: (order: order, price: current_price, condition: condition_string) -> nil
 
-    - :order_created, callback/1: (order: order) -> nil
+    - :order_placed, callback/1: (order: order) -> nil
       called after stoploss order is realized and new sell order is generated.
 
     - :alert_sent, callback/1 format: (alert: alert, price: current_price, condition: condition_string) -> nil

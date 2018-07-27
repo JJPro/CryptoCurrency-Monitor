@@ -6,7 +6,7 @@ defmodule Investing.Finance.OrderManager do
   (Ref: Issue #3: https://github.com/JJPro/paper-trading-system/issues/3)
 
   Role:
-  1. Monitors pending orders and places them when target price is reached.
+  1. Monitors pending orders and executes them when target price is reached.
   2. May split a realized order into another pending order if this is a limit order.
      Currently the system only supports _buy limit order_.
 
@@ -16,7 +16,6 @@ defmodule Investing.Finance.OrderManager do
   alias Investing.Finance
   alias Investing.Finance.{ThresholdManager, Order, Holding}
   alias Investing.Utils.Actions
-  alias Investing.Accounts
   require Logger
 
 
@@ -48,6 +47,23 @@ defmodule Investing.Finance.OrderManager do
   @spec del_order(Order) :: nil
   def del_order(order) do
     GenServer.cast(__MODULE__, {:del_order, order})
+  end
+
+  @doc """
+  Places new order.
+
+  ## NOTE
+  This creates db entry, only call this when server is live, and let this function handle db and server operations
+    - creates db entry
+    - requests to monitor order
+  """
+  @spec place_order(Order) :: nil
+  def place_order(order = %Order{action: "sell"}) do
+    order
+    |> Finance.create_order() # create db entry
+    |> add_order              # add to order manager daemon to monitor
+
+    Actions.do_action :order_placed, order: order
   end
 
 ### GenServer Implementations ###
@@ -83,77 +99,28 @@ defmodule Investing.Finance.OrderManager do
 
   @doc """
   handling :threshold_met message from ThresholdManager daemon
-  This function will be called when an order is placed.
-  Do the following:
-  1. remove order from server state
-  2. expire the order entry, by updating the expired value to true in db
-  3. check if order was an stoploss order
-      if yes, place sell order for the stop loss (3.1. add to both db, and
-                                                  3.2. server state, and
-                                                  3.3 subscribe to threshold service)
-  4. update user balance
-  5. create holding record for the order
+  This function will be called to execute the order.
 
+  Description:
+    find all satisfied orders, execute them and remove them from server state.
   """
   def handle_cast({:threshold_met, %{symbol: symbol, price: price, condition: condition}}, state) do
 
     new_state =
       state
       |> Map.update!(symbol, fn orders ->
-        
-      end)
 
-    {_, new_state} = Map.get_and_update(state, symbol, fn orders ->
-      if is_nil(orders) do # something went wrong if this happens
-        Logger.error("in #{__MODULE__}, something went wrong handling message :threshold_met")
-      else
-        new_orders = Enum.reject(orders, fn order ->
-          if condition(order) == condition do
-            # mark order db entry as expired
-            Finance.update_order(order, %{expired: true}) # Step 2.
-            Actions.do_action :order_expired, order: order, price: price, condition: condition
+        Enum.reject(orders, fn order ->
+          cond do
+            condition(order) == condition -> # order is matched
+              execute_order(order, price)
+              true
 
-            ### Step 4. update user balance
-            update_account_balance(order, price)
-
-            ### Step 5. create holding record for the placed order
-            case order.action do
-              "buy" ->
-                {:ok, %Holding{} = holding} = Finance.create_holding(%{symbol: symbol, bought_at: price, quantity: order.quantity, user_id: order.user_id})
-                Actions.do_action :holding_created, hoding: holding
-              "sell" ->
-                # TODO:
-                # update the holding position for partial sell
-                # or delete the holding record for total sell
-                #
-                # Do the following:
-                # a. get current holding position
-                # b. check residual quantity
-                # c. reduce quantity and check if residual quantity is 0
-                # d. update holding quantity or delete the record all together depends on the residual quantity in step c.
-                # e. trigger off an action
-                {:ok, %Holding{} = holding} = Finance.delete_holding(holding)
-            end
-
-            # deal with buy limit order split
-            # TODO check what the stoploss value is when not provided on creation, is it NULL or 0?
-            #       and revision of this block might be necessary accordingly
-            unless (is_nil(order.stoploss) or order.stoploss == 0) do # this was an limit order
-              {:ok, %Order{} = derived_order} = Finance.create_order(%Order{order | action: "sell", target: order.stoploss, stoploss: nil}) # Step 3.1
-              add_order(derived_order) # Step 3.2
-              ThresholdManager.subscribe(symbol, condition(derived_order), self(), true) # Step 3.3
-              Actions.do_action :order_created, order: derived_order
-            end
-
-            true # Step 1.
-          else
-            false
+            true -> false
           end
-        end )
-        {nil, new_orders} # Step 1.
-      end
-    end)
+        end)
 
+      end)
     {:noreply, new_state}
   end
 
@@ -207,6 +174,112 @@ defmodule Investing.Finance.OrderManager do
   end
 
   @doc """
+  Places a buy-stoploss order.
+
+  Do the following:
+  1. expire the order entry, by setting expired to true in db
+  2. place sell order for the stop loss
+  3. update user balance
+  4. create holding record for the order
+  """
+  @spec execute_order(Order.t(), float) :: nil
+
+  # when this is a buy-stoploss order
+  defp execute_order(
+    order = %Order{stoploss: stoploss, action: action},
+    price)
+  # TODO check what the stoploss value is when not provided on creation, is it NULL or 0?
+  #       and revision of this block might be necessary accordingly
+  when action == "buy" and not (is_nil(stoploss) or stoploss == 0)
+  do
+
+    order
+    |> expire_order() # 1.
+    |> update_account_balance(price) # 3.
+    |> update_holding_position(price) # 4.
+
+    # 2. place a sell order for the stoploss part
+    _sell_order =
+    %Order{ order | action: "sell", target: order.stoploss, stoploss: nil}
+    |> place_order()
+  end
+
+  # this is a normal order (sell or buy)
+  defp execute_order(order = %Order{}, price) do
+    order
+    |> expire_order()
+    |> update_account_balance(price)
+    |> update_holding_position(price)
+
+    Actions.do_action :order_executed, order: order, at_price: price, condition: condition(order)
+  end
+
+  # Description:
+  # two cases depends on order type:
+  #   buy order -> create holding record
+  #   sell order -> delete holding record
+  # then notify whoever care about this change via actions
+  @spec update_holding_position(Order, float) :: Order
+  defp update_holding_position(order = %Order{action: "buy"}, trading_price) do
+
+    # create holding record
+    {:ok, %Holding{} = holding} = Finance.create_holding(
+      %{
+        symbol: order.symbol,
+        bought_at: trading_price,
+        quantity: order.quantity,
+        user_id: order.user_id
+      })
+
+    # trigger action
+    Actions.do_action :holding_updated, action: :increase, hoding: holding
+
+    order
+  end
+  defp update_holding_position(order = %Order{action: "sell"}, _trading_price) do
+
+    # Do the following:
+    #   collect all holdings about this symbol, sorted by creation time
+    #   decrease or delete holdings in chronical order
+    holdings =
+      Finance.list_user_holdings_for_symbol_sorted_by_creation_time(order.user_id, order.symbol)
+      |> IO.inspect(label: ">>>>> all holdings for symbol #{order.symbol}")
+
+    holding_quantity_to_decrease = order.quantity
+
+    _decrease_holdings(holdings, holding_quantity_to_decrease)
+
+    order
+  end
+
+  defp _decrease_holdings(_, 0), do: nil
+  defp _decrease_holdings([], qty_to_decrease) when qty_to_decrease > 0, do: Logger.error("decrease on empty holdings")
+  defp _decrease_holdings([], _), do: nil
+  defp _decrease_holdings([holding = %Holding{quantity: qty}|rest], qty_to_decrease) when qty_to_decrease >= qty do
+    # remove holding record
+    Finance.delete_holding(holding)
+    Actions.do_action :holding_updated, action: :delete, holding: holding
+
+    qty_to_decrease = qty_to_decrease - qty
+    _decrease_holdings(rest, qty_to_decrease)
+  end
+  # qty_to_decrease < holding.quantity
+  defp _decrease_holdings([holding = %Holding{quantity: qty}|_], qty_to_decrease) do
+    # decrease holding record
+    updated_holding_qty = qty - qty_to_decrease
+    Finance.update_holding(holding, %{quantity: updated_holding_qty})
+    Actions.do_action :holding_updated, action: :decrease, holding: holding
+  end
+
+
+  @spec expire_order(Order.t()) :: nil
+  defp expire_order(order = %Order{}) do
+    Finance.update_order(order, %{expired: true})
+  end
+
+
+
+  @doc """
   calculate the appropriate condition string for a given order.
   """
   @spec condition(Order) :: String.t()
@@ -225,5 +298,8 @@ defmodule Investing.Finance.OrderManager do
     end
     Finance.update_user_balance(order.user_id, action, price * order.quantity)
     Actions.do_action :balance_updated, uid: order.user_id
+
+    order
   end
+
 end

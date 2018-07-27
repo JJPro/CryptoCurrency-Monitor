@@ -81,7 +81,7 @@ defmodule Investing.Finance do
   end
 
   defp lookup_crypto(term) do
-    all_crypto_assets
+    all_crypto_assets()
     |> Enum.filter(
     fn crypto ->
       String.contains?(String.downcase(crypto.symbol), term) ||
@@ -100,7 +100,7 @@ defmodule Investing.Finance do
   end
 
   def market(symbol) do
-    if symbol in Enum.map(all_crypto_assets, fn c -> c.symbol end) do
+    if symbol in Enum.map(all_crypto_assets(), fn c -> c.symbol end) do
       "CryptoCurrency"
     else
       # TODO: query database for market name
@@ -420,6 +420,15 @@ defmodule Investing.Finance do
     Repo.all(Holding)
   end
 
+  def list_user_holdings_for_symbol_sorted_by_creation_time(uid, symbol) do
+    Repo.all(
+      from h in Holding,
+      where: h.user_id == ^uid and h.symbol == ^symbol,
+      order_by: h.inserted_at,
+      select: h
+    )
+  end
+
   @doc """
   Gets a single holding.
 
@@ -435,10 +444,6 @@ defmodule Investing.Finance do
 
   """
   def get_holding!(id), do: Repo.get!(Holding, id)
-
-  def get_holding_ do
-
-  end
 
   @doc """
   Creates a holding.
