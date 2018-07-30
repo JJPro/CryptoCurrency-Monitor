@@ -1,4 +1,8 @@
 defmodule InvestingWeb.ActionPanelChannel do
+  @moduledoc """
+  TODO:
+  1. place order ( through OrderManager)
+  """
   use InvestingWeb, :channel
   alias Investing.Finance
   alias Investing.Finance.CoinbaseServer

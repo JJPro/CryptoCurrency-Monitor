@@ -3,8 +3,9 @@ defmodule InvestingWeb.OrderChannel do
   # This channel is responsible for:
   ## Pushing to the front
     - push list of orders to the front after join
-    - push order to the front after creation
+    - push order to the front after creation, this is taken care of by ordermanager.
     - push updates to status of orders when an order is executed or canceled.
+      This is taken care of by order manager.
 
   ## Receiving from the front:
     - to cancel a pending order.
@@ -27,46 +28,49 @@ defmodule InvestingWeb.OrderChannel do
   use InvestingWeb, :channel
   alias Investing.Finance
   alias Investing.Utils.Actions
+  alias Investing.Finance.OrderManager
 
-  @doc """
-  TODO: get token from payload and assign uid to socket assigns
-  """
-  def join("order", %{"token" => token} = payload, socket) do
+  def join("order:"<>uid, payload, socket) do
     if authorized?(payload) do
-      with {:ok, uid} <- Phoenix.Token.verify(socket, "auth token", token, max_age: 86400) do
-        socket = socket
-        |> assign(socket, :uid, uid)       # attach uid with socket
-        |> attach_action_for_order_placement  # add callback for order placement action
-        |> attach_action_for_order_execution  # add callback for order execution action
-        |> attach_action_for_order_cancellation
+      socket = assign(socket, :uid, uid)       # attach uid with socket
 
-        # push order history list immediately after joining
-        send(self, :list_orders)
+      # push order history list immediately after joining
+      send(self, :list_orders)
 
-
-        {:ok, socket}
-      end
+      {:ok, socket}
     else
       {:error, %{reason: "unauthorized"}}
     end
   end
 
-  def handle_in("cancel order", payload, socket) do
+  @doc """
+  Handles canceling order request from the client.
 
-  end
+  Simply call order_manager's function to do the job.
+  It already includes broadcasting to the clients.
+  """
+  def handle_in("cancel order", %{"order_id" => order_id}, socket) do
+    order_id
+    |> Finance.get_order!()
+    |> OrderManager.cancel_order()
 
-  # Channels can be used in a request/response fashion
-  # by sending replies to requests from the client
-  def handle_in("ping", payload, socket) do
-    {:reply, {:ok, payload}, socket}
-  end
+    # Broadcasting to the clients is taken care of by OrderManager, nothing to do here.
 
-  # It is also common to receive messages from the client and
-  # broadcast to everyone in the current topic (order:lobby).
-  def handle_in("shout", payload, socket) do
-    broadcast(socket, "shout", payload)
     {:noreply, socket}
   end
+
+  # # Channels can be used in a request/response fashion
+  # # by sending replies to requests from the client
+  # def handle_in("ping", payload, socket) do
+  #   {:reply, {:ok, payload}, socket}
+  # end
+
+  # # It is also common to receive messages from the client and
+  # # broadcast to everyone in the current topic (order:lobby).
+  # def handle_in("shout", payload, socket) do
+  #   broadcast(socket, "shout", payload)
+  #   {:noreply, socket}
+  # end
 
   @doc """
   Send all orders to the front
@@ -103,29 +107,5 @@ defmodule InvestingWeb.OrderChannel do
 
   defp list_active_orders(socket), do: Finance.list_active_orders_of_user(socket.assigns.uid)
   defp list_inactive_orders(socket), do: Finance.list_inactive_orders_of_user(socket.assigns.uid)
-
-  defp attach_action_for_order_placement(socket) do
-    Actions.add_action(:order_placed, fn order ->
-      push(socket, "add order", %{order: order})
-    end)
-
-    socket
-  end
-
-  defp attach_action_for_order_execution(socket) do
-    Actions.add_action(:order_executed, fn order, _price, _condition ->
-      push(socket, "update order status", %{order: order})
-    end)
-
-    socket
-  end
-
-  defp attach_action_for_order_cancellation(socket) do
-    Actions.add_action(:order_canceled, fn order ->
-      push(socket, "update order status", %{order: order})
-    end)
-
-    socket
-  end
 
 end

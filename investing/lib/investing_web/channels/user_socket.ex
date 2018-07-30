@@ -8,8 +8,8 @@ defmodule InvestingWeb.UserSocket do
   # Rule of thumb:
   # you don't need to give channel a seperate room name if you don't need
   # broadcast.
-  channel "orders", InvestingWeb.OrderChannel
-  channel "holdings", InvestingWeb.HoldingChannel
+  channel "orders:*", InvestingWeb.OrderChannel
+  channel "holdings:*", InvestingWeb.HoldingChannel
 
 
   ## Transports

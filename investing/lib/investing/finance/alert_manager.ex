@@ -7,6 +7,7 @@ defmodule Investing.Finance.AlertManager do
   alias Investing.Finance.ThresholdManager
   alias Investing.Repo
   alias Investing.Utils.Actions
+  require Logger
 
 # Public Interface:
   def start_link do
@@ -92,7 +93,7 @@ defmodule Investing.Finance.AlertManager do
 
         Actions.do_action :alert_sent, alert: alert, price: price, condition: condition
 
-        IO.puts(">>>>> marked alert as expire, and removing it from server state")
+        Logger.debug("marked alert as expire, and removing it from server state")
         true # remove alert from state, return true to reject it out
       else
         false # keep alert in server state, return false to keep it in.

@@ -38,7 +38,7 @@ defmodule Investing.Finance.OrderManager do
 
     add_order(order)   # add to order manager daemon to monitor
 
-    Actions.do_action :order_placed, order: order
+    InvestingWeb.Endpoint.broadcast! "order:#{order.user_id}", :order_placed, [order: order]
   end
 
   @spec cancel_order(%Order{}) :: nil
@@ -47,7 +47,7 @@ defmodule Investing.Finance.OrderManager do
 
     del_order(order)   # remove order from this daemon
 
-    Actions.do_action :order_canceled, order: order
+    InvestingWeb.Endpoint.broadcast! "order:#{order.user_id}", :order_canceled, [order: order]
   end
 
 
@@ -218,7 +218,7 @@ defmodule Investing.Finance.OrderManager do
     |> update_account_balance(price)
     |> update_holding_position(price)
 
-    Actions.do_action :order_executed, order: order, at_price: price, condition: condition(order)
+    InvestingWeb.Endpoint.broadcast! "order:#{order.user_id}", :order_executed, order: order, at_price: price, condition: condition(order)
   end
 
   # Description:
@@ -239,7 +239,7 @@ defmodule Investing.Finance.OrderManager do
       })
 
     # trigger action
-    Actions.do_action :holding_updated, action: :increase, hoding: holding
+    InvestingWeb.Endpoint.broadcast! "holding:#{holding.user_id}", :holding_updated, hoding: holding, action: :increase
 
     order
   end
@@ -265,7 +265,7 @@ defmodule Investing.Finance.OrderManager do
   defp _decrease_holdings([holding = %Holding{quantity: qty}|rest], qty_to_decrease) when qty_to_decrease >= qty do
     # remove holding record
     Finance.delete_holding(holding)
-    Actions.do_action :holding_updated, action: :delete, holding: holding
+    InvestingWeb.Endpoint.broadcast! "holding:#{holding.user_id}", :holding_updated, holding: holding, action: :delete
 
     qty_to_decrease = qty_to_decrease - qty
     _decrease_holdings(rest, qty_to_decrease)
@@ -275,7 +275,7 @@ defmodule Investing.Finance.OrderManager do
     # decrease holding record
     updated_holding_qty = qty - qty_to_decrease
     Finance.update_holding(holding, %{quantity: updated_holding_qty})
-    Actions.do_action :holding_updated, action: :decrease, holding: holding
+    InvestingWeb.Endpoint.broadcast! "holding:#{holding.user_id}", :holding_updated, holding: holding, action: :decrease
   end
 
 
@@ -305,7 +305,7 @@ defmodule Investing.Finance.OrderManager do
       "sell" -> :add
     end
     Finance.update_user_balance(order.user_id, action, price * order.quantity)
-    Actions.do_action :balance_updated, uid: order.user_id
+    InvestingWeb.Endpoint.broadcast! "holding:#{order.user_id}", :balance_updated
 
     order
   end
