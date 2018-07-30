@@ -17,6 +17,6 @@ defmodule InvestingWeb.OrderView do
       target: order.target,
       quantity: order.quantity,
       stoploss: order.stoploss,
-      expired: order.expired}
+      status: order.status}
   end
 end

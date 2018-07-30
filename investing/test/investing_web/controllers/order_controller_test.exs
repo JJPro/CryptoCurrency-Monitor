@@ -4,9 +4,9 @@ defmodule InvestingWeb.OrderControllerTest do
   alias Investing.Finance
   alias Investing.Finance.Order
 
-  @create_attrs %{action: "some action", expired: true, quantity: 42, stoploss: 120.5, symbol: "some symbol", target: 120.5}
-  @update_attrs %{action: "some updated action", expired: false, quantity: 43, stoploss: 456.7, symbol: "some updated symbol", target: 456.7}
-  @invalid_attrs %{action: nil, expired: nil, quantity: nil, stoploss: nil, symbol: nil, target: nil}
+  @create_attrs %{action: "some action", status: "executed", quantity: 42, stoploss: 120.5, symbol: "some symbol", target: 120.5}
+  @update_attrs %{action: "some updated action", status: "pending", quantity: 43, stoploss: 456.7, symbol: "some updated symbol", target: 456.7}
+  @invalid_attrs %{action: nil, status: nil, quantity: nil, stoploss: nil, symbol: nil, target: nil}
 
   def fixture(:order) do
     {:ok, order} = Finance.create_order(@create_attrs)
@@ -33,7 +33,7 @@ defmodule InvestingWeb.OrderControllerTest do
       assert json_response(conn, 200)["data"] == %{
         "id" => id,
         "action" => "some action",
-        "expired" => true,
+        "status" => "executed",
         "quantity" => 42,
         "stoploss" => 120.5,
         "symbol" => "some symbol",
@@ -57,7 +57,7 @@ defmodule InvestingWeb.OrderControllerTest do
       assert json_response(conn, 200)["data"] == %{
         "id" => id,
         "action" => "some updated action",
-        "expired" => false,
+        "status" => "pending",
         "quantity" => 43,
         "stoploss" => 456.7,
         "symbol" => "some updated symbol",

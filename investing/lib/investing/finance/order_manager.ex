@@ -25,31 +25,6 @@ defmodule Investing.Finance.OrderManager do
   end
 
   @doc """
-  pass a new order to the service to monitor
-
-  Note: OrderManager service is not responsible for creating order entries in the database,
-        the database entry creation is already taken care of by OrderController.
-
-  ## Parameters
-
-    - order: Order object
-  """
-  def add_order(order) do
-    GenServer.cast(__MODULE__, {:add_order, order})
-  end
-
-  @doc """
-  delete an order from the system
-
-  ## Parameters
-    - order: Order object to delete
-  """
-  @spec del_order(Order) :: nil
-  def del_order(order) do
-    GenServer.cast(__MODULE__, {:del_order, order})
-  end
-
-  @doc """
   Places new order.
 
   ## NOTE
@@ -57,13 +32,45 @@ defmodule Investing.Finance.OrderManager do
     - creates db entry
     - requests to monitor order
   """
-  @spec place_order(Order) :: nil
-  def place_order(order = %Order{action: "sell"}) do
-    order
-    |> Finance.create_order() # create db entry
-    |> add_order              # add to order manager daemon to monitor
+  @spec place_order(%Order{}) :: nil
+  def place_order(order) do
+    {:ok, order} = Finance.create_order(order) # create db entry
+
+    add_order(order)   # add to order manager daemon to monitor
 
     Actions.do_action :order_placed, order: order
+  end
+
+  @spec cancel_order(%Order{}) :: nil
+  def cancel_order(order) do
+    {:ok, order} = Finance.update_order(order, %{status: "canceled"})
+
+    del_order(order)   # remove order from this daemon
+
+    Actions.do_action :order_canceled, order: order
+  end
+
+
+  @doc """
+  pass a new order to the service to monitor
+
+  ## Parameters
+
+    - order: Order object
+  """
+  defp add_order(order) do
+    GenServer.cast(__MODULE__, {:add_order, order})
+  end
+
+  @doc """
+  delete an order from the service
+
+  ## Parameters
+    - order: Order object to delete
+  """
+  @spec del_order(Order) :: nil
+  defp del_order(order) do
+    GenServer.cast(__MODULE__, {:del_order, order})
   end
 
 ### GenServer Implementations ###
@@ -177,7 +184,7 @@ defmodule Investing.Finance.OrderManager do
   Places a buy-stoploss order.
 
   Do the following:
-  1. expire the order entry, by setting expired to true in db
+  1. set order status to be "executed" in db
   2. place sell order for the stop loss
   3. update user balance
   4. create holding record for the order
@@ -193,8 +200,8 @@ defmodule Investing.Finance.OrderManager do
   when action == "buy" and not (is_nil(stoploss) or stoploss == 0)
   do
 
-    order
-    |> expire_order() # 1.
+    order = order
+    |> update_order_status() # 1.
     |> update_account_balance(price) # 3.
     |> update_holding_position(price) # 4.
 
@@ -206,8 +213,8 @@ defmodule Investing.Finance.OrderManager do
 
   # this is a normal order (sell or buy)
   defp execute_order(order = %Order{}, price) do
-    order
-    |> expire_order()
+    order = order
+    |> update_order_status()
     |> update_account_balance(price)
     |> update_holding_position(price)
 
@@ -240,7 +247,7 @@ defmodule Investing.Finance.OrderManager do
 
     # Do the following:
     #   collect all holdings about this symbol, sorted by creation time
-    #   decrease or delete holdings in chronical order
+    #   decrease or delete holdings in chronological order
     holdings =
       Finance.list_user_holdings_for_symbol_sorted_by_creation_time(order.user_id, order.symbol)
       |> IO.inspect(label: ">>>>> all holdings for symbol #{order.symbol}")
@@ -272,9 +279,10 @@ defmodule Investing.Finance.OrderManager do
   end
 
 
-  @spec expire_order(Order.t()) :: nil
-  defp expire_order(order = %Order{}) do
-    Finance.update_order(order, %{expired: true})
+  @spec update_order_status(Order.t()) :: nil
+  defp update_order_status(order = %Order{}) do
+    {:ok, order} = Finance.update_order(order, %{status: "executed"})
+    order
   end
 
 

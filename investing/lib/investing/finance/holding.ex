@@ -2,6 +2,7 @@ defmodule Investing.Finance.Holding do
   use Ecto.Schema
   import Ecto.Changeset
 
+  # @derive {Poison.Encoder, only: []}
 
   schema "holdings" do
     field :bought_at, :float

@@ -320,8 +320,26 @@ defmodule Investing.Finance do
 
   def list_active_orders do
     Repo.all( from o in Order,
-              where: o.expired == false,
+              where: o.status == "pending",
               select: o)
+  end
+
+  def list_active_orders_of_user(uid) do
+    Repo.all(
+      from o in Order,
+      where: o.status == "pending" and o.user_id == ^uid,
+      order_by: [desc: o.updated_at],
+      select: o
+    )
+  end
+
+  def list_inactive_orders_of_user(uid) do
+    Repo.all(
+      from o in Order,
+      where: o.status != "pending" and o.user_id == ^uid,
+      order_by: [desc: o.updated_at],
+      select: o
+    )
   end
 
   @doc """

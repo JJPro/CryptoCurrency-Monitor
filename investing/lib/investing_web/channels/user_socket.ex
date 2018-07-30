@@ -5,6 +5,12 @@ defmodule InvestingWeb.UserSocket do
   channel "watchlist:*", InvestingWeb.WatchlistChannel
   channel "alert:*", InvestingWeb.AlertChannel
   channel "action_panel", InvestingWeb.ActionPanelChannel
+  # Rule of thumb:
+  # you don't need to give channel a seperate room name if you don't need
+  # broadcast.
+  channel "orders", InvestingWeb.OrderChannel
+  channel "holdings", InvestingWeb.HoldingChannel
+
 
   ## Transports
   transport :websocket, Phoenix.Transports.WebSocket

@@ -130,9 +130,9 @@ defmodule Investing.FinanceTest do
   describe "orders" do
     alias Investing.Finance.Order
 
-    @valid_attrs %{action: "some action", expired: true, quantity: 42, stoploss: 120.5, symbol: "some symbol", target: 120.5}
-    @update_attrs %{action: "some updated action", expired: false, quantity: 43, stoploss: 456.7, symbol: "some updated symbol", target: 456.7}
-    @invalid_attrs %{action: nil, expired: nil, quantity: nil, stoploss: nil, symbol: nil, target: nil}
+    @valid_attrs %{action: "some action", status: "executed", quantity: 42, stoploss: 120.5, symbol: "some symbol", target: 120.5}
+    @update_attrs %{action: "some updated action", status: "pending", quantity: 43, stoploss: 456.7, symbol: "some updated symbol", target: 456.7}
+    @invalid_attrs %{action: nil, status: nil, quantity: nil, stoploss: nil, symbol: nil, target: nil}
 
     def order_fixture(attrs \\ %{}) do
       {:ok, order} =
@@ -156,7 +156,7 @@ defmodule Investing.FinanceTest do
     test "create_order/1 with valid data creates a order" do
       assert {:ok, %Order{} = order} = Finance.create_order(@valid_attrs)
       assert order.action == "some action"
-      assert order.expired == true
+      assert order.status == "executed"
       assert order.quantity == 42
       assert order.stoploss == 120.5
       assert order.symbol == "some symbol"
@@ -172,7 +172,7 @@ defmodule Investing.FinanceTest do
       assert {:ok, order} = Finance.update_order(order, @update_attrs)
       assert %Order{} = order
       assert order.action == "some updated action"
-      assert order.expired == false
+      assert order.status == "pending"
       assert order.quantity == 43
       assert order.stoploss == 456.7
       assert order.symbol == "some updated symbol"

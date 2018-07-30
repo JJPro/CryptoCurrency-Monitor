@@ -9,10 +9,14 @@ defmodule Investing.Utils.Actions do
     - :order_placed, callback/1: (order: order) -> nil
       called after stoploss order is realized and new sell order is generated.
 
+    - :order_canceled, callback/1: (order: order) -> nil
+
     - :alert_sent, callback/1 format: (alert: alert, price: current_price, condition: condition_string) -> nil
       called after the alert message is sent.
 
     - :balance_updated, callback/1: (uid: user_id) -> nil
+
+    - :holding_updated, callback/1: (action: action, holding: holding) -> nil
 
   ## About Actions:
   Actions are the hooks that the system launches at specified points during execution, or when specific events occur. Plugins can specify that one or more of

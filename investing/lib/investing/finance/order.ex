@@ -5,7 +5,7 @@ defmodule Investing.Finance.Order do
 
   schema "orders" do
     field :action, :string
-    field :expired, :boolean, default: false
+    field :status, :string, default: "pending"
     field :quantity, :integer
     field :stoploss, :float
     field :symbol, :string
@@ -18,7 +18,7 @@ defmodule Investing.Finance.Order do
   @doc false
   def changeset(order, attrs) do
     order
-    |> cast(attrs, [:symbol, :action, :target, :quantity, :stoploss, :expired, :user_id])
+    |> cast(attrs, [:symbol, :action, :target, :quantity, :stoploss, :status, :user_id])
     |> validate_required([:symbol, :action, :target, :quantity, :user_id])
   end
 end
