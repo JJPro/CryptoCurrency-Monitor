@@ -23,13 +23,4 @@ Caveats:
 
 
 TODO: 
-1. handle order cancellation, which can only happen on pending orders 
-	- order channel ✅
-	- actions ✅
-	- order manager ✅
-2. append uid to action name, so that user channels only receive action messagse of their own orders. 
-	two approaches: 
-	2.1 broadcast to action+uid inside order manager, 
-		this approach will make your actions pattern irrelevant 
-		This might be good since ets table (adopted by actions) are slower than maps
-	2.2 without using broadcast, just update the action name to include uid
+Holding Channel: 
