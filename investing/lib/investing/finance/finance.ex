@@ -535,8 +535,11 @@ defmodule Investing.Finance do
     - user: user id or user object
     - action: :add or :subtract
     - amount: float  The amount of money to add or subtract
+
+  ## Returns
+  Returns the new balance
   """
-  @spec update_user_balance(integer | %User{}, atom(), float()) :: boolean()
+  @spec update_user_balance(integer | %User{}, atom(), float()) :: float
   def update_user_balance(%User{} = user, action, amount) do
     balance = case action do
       :add ->
@@ -549,6 +552,7 @@ defmodule Investing.Finance do
     from(u in User, update: [set: [balance: ^balance]], where: u.id == ^user.id)
     |> Repo.update_all([]) # lookup `h Repo.update_all for usage`
 
+    balance
   end
   def update_user_balance(user_id, action, amount) when is_number(user_id) do
     user = Accounts.get_user!(user_id)

@@ -15,7 +15,7 @@ defmodule Investing.Finance.OrderManager do
   use GenServer
   alias Investing.Finance
   alias Investing.Finance.{ThresholdManager, Order, Holding}
-  alias Investing.Utils.Actions
+  # alias Investing.Utils.Actions
   require Logger
 
 
@@ -304,8 +304,9 @@ defmodule Investing.Finance.OrderManager do
       "buy" -> :subtract
       "sell" -> :add
     end
-    Finance.update_user_balance(order.user_id, action, price * order.quantity)
-    InvestingWeb.Endpoint.broadcast! "holding:#{order.user_id}", :balance_updated
+    change_amt = price * order.quantity
+    new_balance = Finance.update_user_balance(order.user_id, action, change_amt)
+    InvestingWeb.Endpoint.broadcast! "holding:#{order.user_id}", :balance_updated, balance: new_balance, action: action, amt: change_amt
 
     order
   end
