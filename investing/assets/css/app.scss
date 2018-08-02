@@ -19,11 +19,11 @@ body {
   transform: translate3d(0, 0, 0);
   opacity: 1;
 }
-.alert-cover{
+.config-box-bk-cover{
   opacity:0;
   display: none;
 }
-.alert-cover.active{
+.config-box-bk-cover.active{
   opacity: 1;
   display: block;
 }
@@ -31,6 +31,10 @@ body {
 .alert-panel-threshold.error {
   animation: shake 0.5s;
   border: 1px red solid;
+}
+
+.action-panel{
+  .btn:disabled{cursor:not-allowed;}
 }
 
 @keyframes shake {

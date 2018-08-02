@@ -101,6 +101,8 @@ function state_map(state) {
   };
 }
 
+/*** ================================ ***/
+
 function AlertEntry(props) {
 
   let style = {};

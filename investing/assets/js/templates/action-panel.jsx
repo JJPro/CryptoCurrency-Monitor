@@ -59,6 +59,18 @@ export default connect( state_map )( class ActionPanel extends Component {
     });
   }
 
+  configBuy(symbol) {
+    /**
+    * 1. write a buy-config-panel component, mimicing alert-panel.jsx
+    * 2. compose BuyConfigPanel component here
+    */
+    console.log(symbol);
+  }
+
+  configSell(symbol) {
+    console.log(symbol);
+  }
+
   render(){
     let style = {};
     style.panel = {
@@ -92,7 +104,18 @@ export default connect( state_map )( class ActionPanel extends Component {
       display: "flex",
       width: "45px",
       justifyContent: "space-between",
-    }
+    };
+    style.action_button_container = {
+      display: "flex",
+      flexDirection: "column",
+      // alignItems: "center",
+      alignContent: "center",
+      justifyContent: "center",
+    };
+    style.action_buttons = {
+      margin: "3px auto",
+      width: "100%",
+    };
 
     /**
     * props.current_asset = {
@@ -103,8 +126,10 @@ export default connect( state_map )( class ActionPanel extends Component {
     }
     */
 
+    let action_btn_status = this.props.current_asset.symbol.length == 0;
+
     return (
-      <div className="fixed-bottom container-fluid" style={style.panel}>
+      <div className="fixed-bottom container-fluid action-panel" style={style.panel}>
         <div className="container d-flex justify-content-around align-items-center py-5">
           <div className="mr-5" style={style.search_field_wrapper}>
             {
@@ -138,7 +163,11 @@ export default connect( state_map )( class ActionPanel extends Component {
             <span>Price: </span>
             <span style={ style.price }>$ {this.props.current_asset.price}</span>
           </div>
-          <button className="btn btn-info" onClick={ this.addToWatchlist.bind(this) } disabled={ this.props.current_asset.symbol.length == 0 } >Watch</button>
+          <div style={style.action_button_container}>
+            <button className="btn btn-primary"    onClick={ this.addToWatchlist.bind(this) } disabled={ action_btn_status } style={style.action_buttons}>Watch</button>
+            <button className="btn btn-success" onClick={ () => this.configBuy(this.props.current_asset.symbol) } disabled={ action_btn_status } style={style.action_buttons}>Buy</button>
+            <button className="btn btn-danger"  onClick={ () => this.configSell(this.props.current_asset.symbol) } disabled={ action_btn_status } style={style.action_buttons}>Sell</button>
+          </div>
         </div>
       </div>
     );

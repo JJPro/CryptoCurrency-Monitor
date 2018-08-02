@@ -51,7 +51,7 @@ export default connect(state_map)(props => {
     marginTop: "30px",
     width: "50%",
   };
-  style.alert_cover = {
+  style.config_box_bk_cover = {
     position: "fixed", top: 0, left: 0,
     width: "100vw",
     height: "100vh",
@@ -75,7 +75,7 @@ export default connect(state_map)(props => {
       // convert: {symbol, threshold, condition} ==> {symbol, condition}
       let condition = `${alert.condition} ${alert.threshold}`;
       api.add_alert(window.userToken, alert.symbol, condition, () => {
-        // TODO: subscribe to real update
+        // TODO: subscribe to realtime updates
         let channel = socket.channel(`watchlist:${window.userToken}`);
         channel.join()
         .receive("ok")
@@ -97,7 +97,7 @@ export default connect(state_map)(props => {
 
   function dismissAlertPanel() {
     refs.container.classList.remove("active");
-    refs.alert_cover.classList.remove("active");
+    refs.config_box_bk_cover.classList.remove("active");
   }
 
   function changeCondition(ev) {
@@ -118,7 +118,7 @@ export default connect(state_map)(props => {
 
   return (
     <div>
-      <div className="alert-cover" style={style.alert_cover} ref={ el => refs.alert_cover = el } onClick={dismissAlertPanel}></div>
+      <div className="config-box-bk-cover" style={style.config_box_bk_cover} ref={ el => refs.config_box_bk_cover = el } onClick={dismissAlertPanel}></div>
       <div className="alert-panel" style={style.container} ref={ el => refs.container = el }>
         <h2>Notify me when <span style={style.symbol}>{props.alert.symbol}</span> is: </h2>
         <div>

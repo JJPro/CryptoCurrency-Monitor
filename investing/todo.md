@@ -23,4 +23,6 @@ Caveats:
 
 
 TODO: 
-
+action-panel.js: 
+	- configBuy
+	- configSell
