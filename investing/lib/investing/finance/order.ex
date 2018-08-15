@@ -2,6 +2,9 @@ defmodule Investing.Finance.Order do
   use Ecto.Schema
   import Ecto.Changeset
 
+  @derive {Poison.Encoder, only: [:action, :status, :quantity,
+                                  :stoploss, :symbol, :target]}
+
 
   schema "orders" do
     field :action, :string

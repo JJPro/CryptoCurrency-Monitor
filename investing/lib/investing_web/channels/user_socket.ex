@@ -4,10 +4,7 @@ defmodule InvestingWeb.UserSocket do
   ## Channels
   channel "watchlist:*", InvestingWeb.WatchlistChannel
   channel "alert:*", InvestingWeb.AlertChannel
-  channel "action_panel", InvestingWeb.ActionPanelChannel
-  # Rule of thumb:
-  # you don't need to give channel a seperate room name if you don't need
-  # broadcast.
+  channel "action_panel:*", InvestingWeb.ActionPanelChannel # need the room name to extract uid from it. 
   channel "orders:*", InvestingWeb.OrderChannel
   channel "holdings:*", InvestingWeb.HoldingChannel
 

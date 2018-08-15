@@ -48,7 +48,13 @@ exports.config = {
       // Do not use ES6 compiler in vendor code
       ignore: [/vendor/],
       presets: ['env', 'react'],
-      plugins: ["transform-object-rest-spread"], 
+      plugins: [
+        "transform-object-rest-spread",
+        ["transform-runtime", {
+          "polyfill": false,
+          "regenerator": true
+        }], 
+      ],
     },
     sass: {
       options: {

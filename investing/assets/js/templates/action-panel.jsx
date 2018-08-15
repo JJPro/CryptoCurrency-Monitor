@@ -3,6 +3,7 @@ import { connect } from 'react-redux';
 import api from '../redux/api';
 import store from '../redux/store';
 import socket from '../socket';
+import utils from '../redux/utils';
 
 export default connect( state_map )( class ActionPanel extends Component {
   constructor(props){
@@ -12,9 +13,14 @@ export default connect( state_map )( class ActionPanel extends Component {
   }
 
   channelInit(){
-    this.channel = socket.channel(`action_panel`, {token: window.userToken});
+    this.channel = socket.channel(`action_panel:${window.user_id}`);
     this.channel.join()
-    .receive("ok")
+    .receive("ok", () => {
+      this.channel.push("get balance")
+      .receive("ok", data => store.dispatch({type: "SET_BALANCE", balance: data}));
+      this.channel.push("get holdings")
+      .receive("ok", data => store.dispatch({type: "INIT_HOLDINGS", holdings: data.holdings}));
+    })
     .receive("error", resp => { console.log("Unable to join action_pannel channel", resp) });
 
     this.channel.on("update_current_asset", (asset) => {
@@ -22,6 +28,37 @@ export default connect( state_map )( class ActionPanel extends Component {
         type: "UPDATE_CURRENT_ASSET_PRICE",
         asset: asset
       });
+    });
+
+    /* take care of balance updates */
+    this.channel.on("update_balance", ({type, action, amt}) => {
+      let balance = Object.assign({}, store.getState().balance);
+      // console.log("old balance", balance);
+      balance[type] = action == "add" ? balance[type] + amt : balance[type] - amt;
+      // console.log("new balance", balance);
+      store.dispatch({type: "SET_BALANCE", balance: balance});
+    });
+
+    /* take care of holdings updates */
+    this.channel.on("holding_updated", ({holding, action, amt}) => {
+      /**
+       * actions: "increase"|"decrease"|"delete"
+       *   "increase" simply triggers whenever a buy order is executed,
+       *              doesn't differenciate first order and secondary orders.
+       *   "decrease" triggers when a sell order is executed, and holding entry decreased
+       *   "delete"   triggers when a sell order is executed, and holding entry deleted.
+       */
+      switch (action) {
+        case "increase":
+          store.dispatch({type: "INCREASE_HOLDING", holding: holding});
+          break;
+        case "decrease":
+          store.dispatch({type: "DECREASE_HOLDING", holding: holding, amt: amt});
+          break;
+        case "delete":
+          store.dispatch({type: "DELETE_HOLDING", holding: holding});
+          break;
+      }
     });
   }
 
@@ -57,18 +94,6 @@ export default connect( state_map )( class ActionPanel extends Component {
       let watchlist_channel = this.channel.socket.channels.find( ch => {return ch.topic.includes("watchlist")});
       if (watchlist_channel) watchlist_channel.push("subscribe", {token: window.userToken, asset: this.props.current_asset});
     });
-  }
-
-  configBuy(symbol) {
-    /**
-    * 1. write a buy-config-panel component, mimicing alert-panel.jsx
-    * 2. compose BuyConfigPanel component here
-    */
-    console.log(symbol);
-  }
-
-  configSell(symbol) {
-    console.log(symbol);
   }
 
   render(){
@@ -165,8 +190,8 @@ export default connect( state_map )( class ActionPanel extends Component {
           </div>
           <div style={style.action_button_container}>
             <button className="btn btn-primary"    onClick={ this.addToWatchlist.bind(this) } disabled={ action_btn_status } style={style.action_buttons}>Watch</button>
-            <button className="btn btn-success" onClick={ () => this.configBuy(this.props.current_asset.symbol) } disabled={ action_btn_status } style={style.action_buttons}>Buy</button>
-            <button className="btn btn-danger"  onClick={ () => this.configSell(this.props.current_asset.symbol) } disabled={ action_btn_status } style={style.action_buttons}>Sell</button>
+            <button className="btn btn-success" onClick={ () => utils.configBuy(this.props.current_asset.symbol) } disabled={ action_btn_status } style={style.action_buttons}>Buy</button>
+            <button className="btn btn-danger"  onClick={ () => utils.configSell(this.props.current_asset.symbol) } disabled={ action_btn_status } style={style.action_buttons}>Sell</button>
           </div>
         </div>
       </div>

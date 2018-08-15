@@ -32,7 +32,7 @@ defmodule InvestingWeb.OrderChannel do
 
   def join("order:"<>uid, payload, socket) do
     if authorized?(payload) do
-      socket = assign(socket, :uid, uid)       # attach uid with socket
+      socket = assign(socket, :uid, String.to_integer(uid))       # attach uid with socket
 
       # push order history list immediately after joining
       send(self, :list_orders)
@@ -88,11 +88,6 @@ defmodule InvestingWeb.OrderChannel do
     inactive_orders = list_inactive_orders(socket)
 
     push(socket, "init order list", %{
-      # WARNING
-      # This may cause Poison Encoding issues,
-      # sovle by using @derive attr inside the order schema
-      # to specify which fields and how to json encode
-      # the struct.
       active: active_orders,
       inactive: inactive_orders
     })

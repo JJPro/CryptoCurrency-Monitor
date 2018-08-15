@@ -558,4 +558,18 @@ defmodule Investing.Finance do
     user = Accounts.get_user!(user_id)
     update_user_balance(user, action, amount)
   end
+
+  @spec get_user_balances(integer | %User{}) :: {float, float}
+  def get_user_balances(uid) when is_number(uid) do
+    get_user_balances(Accounts.get_user!(uid))
+  end
+  def get_user_balances(%User{} = user) do
+    total = user.balance
+    pending_orders = list_active_orders_of_user(user.id)
+    reserved_for_pending_orders = Enum.reduce(pending_orders, 0, fn order, acc ->
+      if order.action == "buy", do: acc + order.target * order.quantity, else: acc
+    end)
+    usable = total - reserved_for_pending_orders
+    {total, usable}
+  end
 end

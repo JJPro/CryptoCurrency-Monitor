@@ -15,6 +15,7 @@
     <%= if @current_user do %>
       <script type="text/javascript">
         window.userToken = "<%= assigns[:user_token] %>";
+        window.user_id = <%= assigns[:user_id] %>;
       </script>
     <% end %>
     <div class="container">

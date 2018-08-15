@@ -9,6 +9,7 @@ defmodule InvestingWeb.Router do
     plug :put_secure_browser_headers
     plug InvestingWeb.Plugs.SetUser
     plug :put_user_token
+    plug :put_user_id
   end
 
   pipeline :api do
@@ -63,6 +64,14 @@ defmodule InvestingWeb.Router do
     if current_user = conn.assigns[:current_user] do
       token = Phoenix.Token.sign(conn, "auth token", current_user.id)
       assign(conn, :user_token, token)
+    else
+      conn
+    end
+  end
+
+  defp put_user_id(conn, _) do
+    if current_user = conn.assigns[:current_user] do
+      assign(conn, :user_id, current_user.id)
     else
       conn
     end

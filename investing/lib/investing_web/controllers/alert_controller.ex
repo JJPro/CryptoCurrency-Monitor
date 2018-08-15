@@ -17,6 +17,8 @@ defmodule InvestingWeb.AlertController do
   end
 
   def create(conn, %{"symbol" => symbol, "condition" => condition, "token" => token}) do
+    require Logger
+    Logger.info("creating alert")
     with {:ok, user_id} <- Phoenix.Token.verify(conn, "auth token", token, max_age: 86400),
          {:ok, %Alert{} = alert} <- Finance.create_alert(%{symbol: symbol, condition: condition, user_id: user_id}) do
 

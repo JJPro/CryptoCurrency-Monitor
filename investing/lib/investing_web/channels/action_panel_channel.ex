@@ -1,15 +1,18 @@
 defmodule InvestingWeb.ActionPanelChannel do
   @moduledoc """
-  TODO:
-  1. place order ( through OrderManager)
   """
   use InvestingWeb, :channel
   alias Investing.Finance
   alias Investing.Finance.CoinbaseServer
   alias Investing.Finance.StockServer
+  alias Investing.Finance.OrderManager
+  alias Investing.Finance.Order
+  alias Investing.Accounts
+  require Logger
 
-  def join(_, payload, socket) do
+  def join("action_panel:"<>uid, payload, socket) do
     if authorized?(payload) do
+      socket = assign(socket, :uid, String.to_integer(uid))       # attach uid with socket
       {:ok, socket}
     else
       {:error, %{reason: "unauthorized"}}
@@ -31,6 +34,31 @@ defmodule InvestingWeb.ActionPanelChannel do
     if old_symbol|>String.length > 0, do: Finance.unsubscribe(old_symbol, self)
     Finance.subscribe(new_symbol, self)
     {:noreply, socket}
+  end
+
+  def handle_in("place order", order, socket) do
+    Logger.info("placing order, #{inspect order}")
+    Logger.info("uid, #{inspect socket.assigns.uid}")
+    order =
+      order
+      |> Map.new(fn {k, v} -> {String.to_atom(k), v} end)
+      |> Map.put(:user_id, socket.assigns.uid)
+    OrderManager.place_order(order)
+    {:noreply, socket}
+  end
+
+  def handle_in("get balance", _, socket) do
+    {total, usable} = Finance.get_user_balances(socket.assigns.uid);
+
+    Logger.info("user's balance is {total: #{total}, usable: #{usable}}")
+    {:reply, {:ok, %{total: total, usable: usable}}, socket}
+  end
+
+  def handle_in("get holdings", _, socket) do
+    user = Accounts.get_user!(socket.assigns.uid) |> Investing.Repo.preload(:holdings)
+    holdings = user.holdings
+    Logger.info("user #{user.username}'s holdings: #{inspect holdings}")
+    {:reply, {:ok, %{holdings: holdings}}, socket}
   end
 
   def handle_info({:price_updated, asset}, socket) do

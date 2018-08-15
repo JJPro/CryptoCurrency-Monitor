@@ -6,7 +6,7 @@ import store from '../redux/store';
 import api from '../redux/api';
 
 import ActionPanel from './action-panel';
-import AlertPanel from './alert-panel';
+import ConfigPanel from './config-panel';
 import Watchlist from './watchlist';
 import Alerts from './alerts';
 import Portfolio from './portfolio';
@@ -25,7 +25,7 @@ export default (root) => {
 
 let Index = connect(state => state)( props => {
 
-  window.store = store; // WARNING for debugging purposes
+  window.store = store; // DEBUG for debugging purposes
   let style = {};
 
   return (
@@ -44,7 +44,7 @@ let Index = connect(state => state)( props => {
           <Route path="/portfolio" exact component={Portfolio} />
         </Switch>
         <ActionPanel />
-        <AlertPanel />
+        <ConfigPanel />
       </div>
     </Router>
   );

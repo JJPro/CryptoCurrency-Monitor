@@ -27,7 +27,7 @@ defmodule InvestingWeb.HoldingChannel do
 
   def join("holding:"<>uid, payload, socket) do
     if authorized?(payload) do
-      socket = assign(socket, :uid, uid)  # attach uid with socket
+      socket = assign(socket, :uid, String.to_integer(uid))  # attach uid with socket
 
       # subscribe to financial servers
       # this is taken care of inside :send_inital_data message handler

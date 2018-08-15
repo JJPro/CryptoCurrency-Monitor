@@ -90,7 +90,7 @@ export default connect( state_map )( class Portfolio extends Component {
       type: "SET_ALERT",
       alert: {symbol: asset.symbol}
     });
-    document.querySelector('.config-box-bk-cover').classList.add("active");
+    document.querySelector('.config-panel-matte').classList.add("active");
     document.querySelector('.alert-panel').classList.add("active");
   }
 } );

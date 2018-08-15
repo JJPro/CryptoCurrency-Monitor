@@ -38,16 +38,26 @@ defmodule Investing.Finance.OrderManager do
 
     add_order(order)   # add to order manager daemon to monitor
 
-    InvestingWeb.Endpoint.broadcast! "order:#{order.user_id}", :order_placed, [order: order]
+    InvestingWeb.Endpoint.broadcast! "order:#{order.user_id}", "order_placed", %{order: order}
+    if order.action == "buy" do # update usable balance
+      Logger.info("broadcasting to action panel to update balance after placing order")
+      InvestingWeb.Endpoint.broadcast! "action_panel:#{order.user_id}", "update_balance", %{type: :usable, action: :subtract, amt: order.target * order.quantity}
+    end
+
   end
 
   @spec cancel_order(%Order{}) :: nil
   def cancel_order(order) do
+    Logger.debug("canceling order in order manager")
     {:ok, order} = Finance.update_order(order, %{status: "canceled"})
 
     del_order(order)   # remove order from this daemon
 
-    InvestingWeb.Endpoint.broadcast! "order:#{order.user_id}", :order_canceled, [order: order]
+    InvestingWeb.Endpoint.broadcast! "order:#{order.user_id}", "order_canceled", %{order: order}
+    if order.action == "buy" do # update usable balance
+      Logger.info("broadcasting to action panel to update balance after canceling order")
+      InvestingWeb.Endpoint.broadcast! "action_panel:#{order.user_id}", "update_balance", %{type: "usable", action: :add, amt: order.target * order.quantity}
+    end
   end
 
 
@@ -112,6 +122,7 @@ defmodule Investing.Finance.OrderManager do
     find all satisfied orders, execute them and remove them from server state.
   """
   def handle_cast({:threshold_met, %{symbol: symbol, price: price, condition: condition}}, state) do
+    price = String.to_float(price)
 
     new_state =
       state
@@ -218,7 +229,7 @@ defmodule Investing.Finance.OrderManager do
     |> update_account_balance(price)
     |> update_holding_position(price)
 
-    InvestingWeb.Endpoint.broadcast! "order:#{order.user_id}", :order_executed, order: order, at_price: price, condition: condition(order)
+    InvestingWeb.Endpoint.broadcast! "order:#{order.user_id}", "order_executed", %{order: order, at_price: price, condition: condition(order)}
   end
 
   # Description:
@@ -239,7 +250,7 @@ defmodule Investing.Finance.OrderManager do
       })
 
     # trigger action
-    InvestingWeb.Endpoint.broadcast! "holding:#{holding.user_id}", :holding_updated, hoding: holding, action: :increase
+    InvestingWeb.Endpoint.broadcast! "action_panel:#{holding.user_id}", "holding_updated", %{hoding: holding, action: :increase}
 
     order
   end
@@ -265,7 +276,7 @@ defmodule Investing.Finance.OrderManager do
   defp _decrease_holdings([holding = %Holding{quantity: qty}|rest], qty_to_decrease) when qty_to_decrease >= qty do
     # remove holding record
     Finance.delete_holding(holding)
-    InvestingWeb.Endpoint.broadcast! "holding:#{holding.user_id}", :holding_updated, holding: holding, action: :delete
+    InvestingWeb.Endpoint.broadcast! "action_panel:#{holding.user_id}", "holding_updated", %{holding: holding, action: :delete}
 
     qty_to_decrease = qty_to_decrease - qty
     _decrease_holdings(rest, qty_to_decrease)
@@ -275,7 +286,7 @@ defmodule Investing.Finance.OrderManager do
     # decrease holding record
     updated_holding_qty = qty - qty_to_decrease
     Finance.update_holding(holding, %{quantity: updated_holding_qty})
-    InvestingWeb.Endpoint.broadcast! "holding:#{holding.user_id}", :holding_updated, holding: holding, action: :decrease
+    InvestingWeb.Endpoint.broadcast! "action_panel:#{holding.user_id}", "holding_updated", %{holding: holding, action: :decrease, amt: qty_to_decrease}
   end
 
 
@@ -306,7 +317,7 @@ defmodule Investing.Finance.OrderManager do
     end
     change_amt = price * order.quantity
     new_balance = Finance.update_user_balance(order.user_id, action, change_amt)
-    InvestingWeb.Endpoint.broadcast! "holding:#{order.user_id}", :balance_updated, balance: new_balance, action: action, amt: change_amt
+    InvestingWeb.Endpoint.broadcast! "action_panel:#{order.user_id}", "update_balance", %{type: :total, action: action, amt: change_amt}
 
     order
   end

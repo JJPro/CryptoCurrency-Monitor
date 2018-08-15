@@ -11,24 +11,24 @@ body {
   padding: 30px 25px;
 }
 
-.alert-panel {
+.config-panel {
   transform: translate3d(120%, 0, 0);
   opacity: 0;
 }
-.alert-panel.active {
+.config-panel.active {
   transform: translate3d(0, 0, 0);
   opacity: 1;
 }
-.config-box-bk-cover{
+.config-panel-matte{
   opacity:0;
   display: none;
 }
-.config-box-bk-cover.active{
+.config-panel-matte.active{
   opacity: 1;
   display: block;
 }
 
-.alert-panel-threshold.error {
+.config-panel-field.error {
   animation: shake 0.5s;
   border: 1px red solid;
 }

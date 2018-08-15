@@ -1,5 +1,8 @@
 import store from './store';
 
+/**
+* RESTFUL API calls
+**/
 class API {
   request_assets(token, callback){
     // get request
