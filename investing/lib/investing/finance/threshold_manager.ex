@@ -46,7 +46,7 @@ defmodule Investing.Finance.ThresholdManager do
 
 
 ### GenServer Implementation
-  def terminate(reason, state) do
+  def terminate(_reason, state) do
     {:shutdown, state}
   end
 
@@ -115,14 +115,15 @@ defmodule Investing.Finance.ThresholdManager do
     {_, new_state} = state |> Map.get_and_update(symbol, fn thresholds ->
       new_thresholds = thresholds |> Enum.reject(  # step 2.
       fn (%{condition: condition, pid: pid, transient?: transient?}) -> # compare price and evaluate condition, to filter out all satisfied thresholds.
-        remove? = false
         {satisfy?, _} = Code.eval_string("#{price} #{condition}")
-        if satisfy? do
+        remove? = if satisfy? do
 
           # Step 1.
           GenServer.cast(pid, {:threshold_met, %{symbol: symbol, condition: condition, price: price}})
           # Step 2.
-          remove? = transient?
+          transient?
+        else
+          false
         end
         # return false if threshold is both met and being transient.
         # otherwise return true.

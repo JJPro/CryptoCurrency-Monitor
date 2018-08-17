@@ -250,7 +250,7 @@ defmodule Investing.Finance.OrderManager do
       })
 
     # trigger action
-    InvestingWeb.Endpoint.broadcast! "action_panel:#{holding.user_id}", "holding_updated", %{hoding: holding, action: :increase}
+    InvestingWeb.Endpoint.broadcast! "action_panel:#{holding.user_id}", "holding_updated", %{holding: holding, action: :increase}
 
     order
   end

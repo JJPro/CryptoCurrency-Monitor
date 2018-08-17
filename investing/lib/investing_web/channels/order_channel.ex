@@ -30,7 +30,7 @@ defmodule InvestingWeb.OrderChannel do
   alias Investing.Utils.Actions
   alias Investing.Finance.OrderManager
 
-  def join("order:"<>uid, payload, socket) do
+  def join("orders:"<>uid, payload, socket) do
     if authorized?(payload) do
       socket = assign(socket, :uid, String.to_integer(uid))       # attach uid with socket
 

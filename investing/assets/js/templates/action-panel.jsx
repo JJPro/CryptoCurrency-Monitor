@@ -50,6 +50,7 @@ export default connect( state_map )( class ActionPanel extends Component {
        */
       switch (action) {
         case "increase":
+          console.log("increasing holding in frontend", "holding", holding, "action", action, "amount", amt);
           store.dispatch({type: "INCREASE_HOLDING", holding: holding});
           break;
         case "decrease":

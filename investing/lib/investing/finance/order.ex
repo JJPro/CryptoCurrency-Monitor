@@ -3,7 +3,7 @@ defmodule Investing.Finance.Order do
   import Ecto.Changeset
 
   @derive {Poison.Encoder, only: [:action, :status, :quantity,
-                                  :stoploss, :symbol, :target]}
+                                  :stoploss, :symbol, :target, :id]}
 
 
   schema "orders" do

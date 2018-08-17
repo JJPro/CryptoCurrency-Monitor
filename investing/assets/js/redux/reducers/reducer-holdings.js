@@ -10,7 +10,11 @@ export default (state = _default, action) => {
           else
             return holding;
         });
-      } else return Array.from(state).unshift(action.holding);
+      } else {
+        let holdings = Array.from(state);
+        holdings.unshift(action.holding);
+        return holdings;
+      }
 
 
     case "DECREASE_HOLDING": // triggers on sell execution, resulting entry decrease

@@ -2,9 +2,14 @@ defmodule InvestingWeb.HoldingChannel do
   @moduledoc """
   The Holding Channel manages communication surrounding portfolio positions.
 
-  On joining the channel, the client should get those initial static data for his account:
-  - account balance
-  - list of all the holding assets (without gain/loss data)
+  Deprecated:
+  (now balance and holdings are pushed inside action_panel,
+  because other modules requires those data to be present
+  as well, and action panel is perfect place to get those
+  data since it is always present)
+    On joining the channel, the client should get those initial static data for his account:
+    - account balance
+    - list of all the holding assets (without gain/loss data)
 
   On :balance_udpated, update balance and total equity values:
   Nothing to do here.
@@ -25,15 +30,18 @@ defmodule InvestingWeb.HoldingChannel do
   alias Investing.Finance
   alias Investing.Accounts
 
-  def join("holding:"<>uid, payload, socket) do
+  def join("holdings:"<>uid, payload, socket) do
     if authorized?(payload) do
       socket = assign(socket, :uid, String.to_integer(uid))  # attach uid with socket
 
       # subscribe to financial servers
       # this is taken care of inside :send_inital_data message handler
 
-      # push holding positions immediately after joining
-      send(self, :send_initial_data)
+      # Deprecated - see module doc for detail
+        # # push holding positions immediately after joining
+        # send(self, :send_initial_data)
+
+      send(self, :request_live_updates)
 
       {:ok, socket}
     else
@@ -41,25 +49,34 @@ defmodule InvestingWeb.HoldingChannel do
     end
   end
 
-  @doc """
-  On joining the channel, the client should get those initial static data for his account:
-    - account balance
-    - list of all the holding assets (without gain/loss data)
+  # Deprecated - see module doc
+    # @doc """
+    # On joining the channel, the client should get those initial static data for his account:
+    #   - account balance
+    #   - list of all the holding assets (without gain/loss data)
+    #
+    # In addition, this function is also the best opportunity to subscribe to financial live updating services.
+    # """
+    # def handle_info(:send_initial_data, socket) do
+    #   user = Accounts.get_user!(socket.assigns.uid) |> Investing.Repo.preload([:holdings])
+    #   balance = user.balance
+    #   holdings = user.holdings
+    #
+    #   # subscribe to financial services to get live updates
+    #   Enum.each(holdings, &(Finance.subscribe(&1.symbol, self())))
+    #
+    #   push(socket, "initial data", %{
+    #     balance: balance,
+    #     holdings: holdings
+    #   })
+    #
+    #   {:noreply, socket}
+    # end
 
-  In addition, this function is also the best opportunity to subscribe to financial live updating services.
-  """
-  def handle_info(:send_initial_data, socket) do
+  def handle_info(:request_live_updates, socket) do
     user = Accounts.get_user!(socket.assigns.uid) |> Investing.Repo.preload([:holdings])
-    balance = user.balance
-    holdings = user.holdings
 
-    # subscribe to financial services to get live updates
-    Enum.each(holdings, &(Finance.subscribe(&1.symbol, self())))
-
-    push(socket, "initial data", %{
-      balance: balance,
-      holdings: holdings
-    })
+    Enum.each(user.holdings, &(Finance.subscribe(&1.symbol, self())))
 
     {:noreply, socket}
   end

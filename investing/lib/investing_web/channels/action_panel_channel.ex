@@ -20,7 +20,7 @@ defmodule InvestingWeb.ActionPanelChannel do
   end
 
   def terminate(msg, socket) do
-    Finance.unsubscribe_all(self)
+    Finance.unsubscribe_all(self())
     {:shutdown, :closed}
   end
 
@@ -50,14 +50,14 @@ defmodule InvestingWeb.ActionPanelChannel do
   def handle_in("get balance", _, socket) do
     {total, usable} = Finance.get_user_balances(socket.assigns.uid);
 
-    Logger.info("user's balance is {total: #{total}, usable: #{usable}}")
+    # Logger.info("user's balance is {total: #{total}, usable: #{usable}}")
     {:reply, {:ok, %{total: total, usable: usable}}, socket}
   end
 
   def handle_in("get holdings", _, socket) do
     user = Accounts.get_user!(socket.assigns.uid) |> Investing.Repo.preload(:holdings)
     holdings = user.holdings
-    Logger.info("user #{user.username}'s holdings: #{inspect holdings}")
+    # Logger.info("user #{user.username}'s holdings: #{inspect holdings}")
     {:reply, {:ok, %{holdings: holdings}}, socket}
   end
 

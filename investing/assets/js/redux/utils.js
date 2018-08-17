@@ -43,6 +43,15 @@ class Utils {
       , 0
     );
   }
+
+  // format string
+  currencyFormatString(num, printSymbol = false){
+    if (printSymbol){
+      return num.toLocaleString("en-US", {style: "currency", currency:'USD'});
+    } else {
+      return num.toLocaleString("en-US");
+    }
+  }
 }
 
 export default new Utils();

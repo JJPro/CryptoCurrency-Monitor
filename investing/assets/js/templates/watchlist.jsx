@@ -9,7 +9,6 @@ import store from '../redux/store';
 export default connect( state_map )( class Watchlist extends Component {
   constructor(props){
     super(props);
-    this.channel = props.channel;
     this.channelInit();
 
     if (window.userToken){
@@ -117,7 +116,7 @@ function WatchlistEntry(props) {
   return (
     <tr>
       <td style={style.symbol}>{ props.asset.symbol }</td>
-      <td style={style.price }>{ props.asset.price }</td>
+      <td style={style.price }>{ utils.currencyFormatString(props.asset.price) }</td>
       <td style={style.actioncell}>
         <button type="button" style={style.close_btn} aria-label="Close" onClick={ () => props.removeAsset(props.asset) }>
           <svg fill="#000000" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
