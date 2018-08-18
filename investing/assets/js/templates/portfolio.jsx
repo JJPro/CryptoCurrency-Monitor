@@ -10,7 +10,11 @@ export default connect( state_map )( class Portfolio extends Component {
   constructor(props){
     super(props);
     this.state = {
-      liveQuotes: []
+      liveQuotes: [],
+      orders: {
+        active: [],
+        inactive: []
+      },
     };
 
     window.utils = utils;
@@ -65,7 +69,35 @@ export default connect( state_map )( class Portfolio extends Component {
   }
 
   ordersChannelMessagesSetup(){
+    this.ordersChannel.on("init order list", ({active, inactive}) => {
+      this.setState({orders: {active: active, inactive: inactive}});
+    });
+    this.ordersChannel.on("order_canceled", ({order}) => {
+      this.moveOrderToInactive(order);
+    });
+    this.ordersChannel.on("order_placed", ({order}) => {
+      let new_active = this.state.orders.active;
+      new_active.unshift(order);
+      this.setState({
+        orders: {
+          active: new_active,
+          inactive: this.state.orders.inactive
+        }
+      });
+    });
+    this.ordersChannel.on("order_executed", ({order}) => {
+      this.moveOrderToInactive(order);
+    });
+  }
 
+  moveOrderToInactive(order) {
+    // remove from active list
+    let active = this.state.orders.active.filter( o => o.id != order.id );
+
+    // add to head of inactive list
+    let inactive = Array.from(this.state.orders.inactive);
+    inactive.unshift(order);
+    this.setState( {orders: {active: active, inactive: inactive}} );
   }
 
   quote(symbol){
@@ -97,7 +129,7 @@ export default connect( state_map )( class Portfolio extends Component {
       totalGainStr = totalGainPercentStr = "";
     }
 
-
+    // console.log("rendering orders", this.state.orders);
     return (
       <div id="portfolio">
         <h1>Portfolio</h1>
@@ -106,21 +138,42 @@ export default connect( state_map )( class Portfolio extends Component {
           <li>Purchase Power: {utils.currencyFormatString(this.props.balance.usable, true)}</li>
           <li>Total Gain: <span style={style.totalGain}>{`${totalGainStr}${totalGainPercentStr}`}</span></li>
         </ul>
-        <h2>Position:</h2>
-        <table className="table">
-          <thead className="thead-light">
-            <tr>
-              <th scope="col">Symbol</th>
-              <th scope="col">Bought at</th>
-              <th scope="col">Price</th>
-              <th scope="col">Qty</th>
-              <th scope="col">Gain/Loss</th>
-            </tr>
-          </thead>
-          <tbody>
-            {this.props.holdings.map( h => <HoldingEntry holding={h} quote={this.quote(h.symbol)} key={h.id} /> )}
-          </tbody>
-        </table>
+        <div className="position" style={style.position}>
+          <h2>Position:</h2>
+          <table className="table">
+            <thead className="thead-light">
+              <tr>
+                <th scope="col">Symbol</th>
+                <th scope="col">Bought at</th>
+                <th scope="col">Price</th>
+                <th scope="col">Qty</th>
+                <th scope="col">Gain/Loss</th>
+              </tr>
+            </thead>
+            <tbody>
+              {this.props.holdings.map( h => <HoldingEntry holding={h} quote={this.quote(h.symbol)} key={h.id} /> )}
+            </tbody>
+          </table>
+        </div>
+        <div className="orders" style={style.orders}>
+          <h2>Order History:</h2>
+          <table className="table">
+            <thead className="thead-light">
+              <tr>
+                <th scope="col">Symbol</th>
+                <th scope="col">Action</th>
+                <th scope="col">Target Price</th>
+                <th scope="col">Quantity</th>
+                <th scope="col">Stop loss</th>
+                <th scope="col">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {this.state.orders.active.map( o => <OrderEntry order={o} key={o.id} />)}
+              {this.state.orders.inactive.map( o => <OrderEntry order={o} key={o.id} />)}
+            </tbody>
+          </table>
+        </div>
       </div>
     );
   }
@@ -133,7 +186,7 @@ function state_map(state) {
   return {
     balance: state.balance,
     holdings: state.holdings,
-
+    // orders: state.orders,
   };
 }
 
@@ -157,4 +210,19 @@ function HoldingEntry(props){
       <td>{gainStr}</td>
     </tr>
   );
+}
+
+function OrderEntry(props) {
+
+
+  return (
+    <tr>
+      <th scope="row">{props.order.symbol}</th>
+      <td>{props.order.action}</td>
+      <td>{utils.currencyFormatString(props.order.target)}</td>
+      <td>{props.order.quantity}</td>
+      <td>{props.order.stoploss && utils.currencyFormatString(props.order.stoploss)}</td>
+      <td>{props.order.status}</td>
+    </tr>
+  )
 }

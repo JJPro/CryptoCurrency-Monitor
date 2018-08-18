@@ -38,7 +38,7 @@ defmodule Investing.Finance.OrderManager do
 
     add_order(order)   # add to order manager daemon to monitor
 
-    InvestingWeb.Endpoint.broadcast! "order:#{order.user_id}", "order_placed", %{order: order}
+    InvestingWeb.Endpoint.broadcast! "orders:#{order.user_id}", "order_placed", %{order: order}
     if order.action == "buy" do # update usable balance
       Logger.info("broadcasting to action panel to update balance after placing order")
       InvestingWeb.Endpoint.broadcast! "action_panel:#{order.user_id}", "update_balance", %{type: :usable, action: :subtract, amt: order.target * order.quantity}
@@ -53,7 +53,7 @@ defmodule Investing.Finance.OrderManager do
 
     del_order(order)   # remove order from this daemon
 
-    InvestingWeb.Endpoint.broadcast! "order:#{order.user_id}", "order_canceled", %{order: order}
+    InvestingWeb.Endpoint.broadcast! "orders:#{order.user_id}", "order_canceled", %{order: order}
     if order.action == "buy" do # update usable balance
       Logger.info("broadcasting to action panel to update balance after canceling order")
       InvestingWeb.Endpoint.broadcast! "action_panel:#{order.user_id}", "update_balance", %{type: "usable", action: :add, amt: order.target * order.quantity}
@@ -229,7 +229,7 @@ defmodule Investing.Finance.OrderManager do
     |> update_account_balance(price)
     |> update_holding_position(price)
 
-    InvestingWeb.Endpoint.broadcast! "order:#{order.user_id}", "order_executed", %{order: order, at_price: price, condition: condition(order)}
+    InvestingWeb.Endpoint.broadcast! "orders:#{order.user_id}", "order_executed", %{order: order, at_price: price, condition: condition(order)}
   end
 
   # Description:
