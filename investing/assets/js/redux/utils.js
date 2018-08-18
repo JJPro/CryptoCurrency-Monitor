@@ -52,6 +52,10 @@ class Utils {
       return num.toLocaleString("en-US");
     }
   }
+
+  percentFormatString(num){
+    return num.toLocaleString('en-US', {style: 'percent', maximumFractionDigits: 2});
+  }
 }
 
 export default new Utils();

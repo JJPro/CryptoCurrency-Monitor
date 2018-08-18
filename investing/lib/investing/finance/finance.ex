@@ -94,8 +94,9 @@ defmodule Investing.Finance do
     [
       %{symbol: "BTC-USD", name: "Bitcoin USD", market: "CryptoCurrency"},
       %{symbol: "LTC-USD", name: "Litecoin USD", market: "CryptoCurrency"},
-      %{symbol: "ETH-USD", name: "Ether USD", market: "CryptoCurrency"},
+      %{symbol: "ETH-USD", name: "Ethereum USD", market: "CryptoCurrency"},
       %{symbol: "BCH-USD", name: "Bitcoin Cash USD", market: "CryptoCurrency"},
+      %{symbol: "ETC-USD", name: "Ethereum Classic USD", market: "CryptoCurrency"},
     ]
   end
 

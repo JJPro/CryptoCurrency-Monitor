@@ -49,10 +49,13 @@ defmodule Investing.Finance.CoinbaseServer do
     # IO.puts ">>>>> adding subscriber"
     # add channel to symbol's pub list in state
     if Map.has_key?(state, symbol) do
-      new_state = %{state | symbol => MapSet.put(state[symbol], channel)}
+      {last_quote, pid_set} = state[symbol]
+      new_state = %{state | symbol => {last_quote, MapSet.put(pid_set, channel)}}
+
+      send_quote_to_channel(channel, symbol, last_quote)
       {:ok, new_state}
     else
-      new_state = Map.put(state, symbol, MapSet.new([channel]))
+      new_state = Map.put(state, symbol, {"--", MapSet.new([channel])})
       frame = encode_frame(
         %{
           type: "subscribe",
@@ -71,9 +74,11 @@ defmodule Investing.Finance.CoinbaseServer do
       state,
       fn (symbol, acc) ->
         if Map.has_key?(acc, symbol) do
-          %{acc | symbol => MapSet.put(acc[symbol], channel)}
+          {last_quote, pid_set} = state[symbol]
+          send_quote_to_channel(channel, symbol, last_quote)
+          %{acc | symbol => {last_quote, MapSet.put(pid_set, channel)}}
         else
-          Map.put(acc, symbol, MapSet.new([channel]))
+          Map.put(acc, symbol, {"--", MapSet.new([channel])})
         end
       end
     )
@@ -97,9 +102,11 @@ defmodule Investing.Finance.CoinbaseServer do
       fn (symbol, acc) ->
         with {state, unsubs} <- acc do
           if Map.has_key?(state, symbol) do
-            state = %{state | symbol => MapSet.delete(state[symbol], channel)}
+            {last_quote, pid_set} = state[symbol]
+            new_pid_set = MapSet.delete(pid_set, channel)
+            state = %{state | symbol => {last_quote, new_pid_set}}
             cond do
-              Enum.empty?(state[symbol]) -> {state, [symbol | unsubs]}
+              Enum.empty?(new_pid_set) -> {state, [symbol | unsubs]}
               true -> {state, unsubs}
             end
           else
@@ -123,9 +130,10 @@ defmodule Investing.Finance.CoinbaseServer do
 
   def handle_cast({ :del_subscriber, {symbol, channel} }, state) do
     # unsubscribe from gdax when no one is listening on given symbol
-    new_channel_set = MapSet.delete(state[symbol], channel)
-    new_state = %{state | symbol => new_channel_set}
-    if Enum.count(new_channel_set) > 0 do
+    {last_quote, pid_set} = state[symbol]
+    new_pid_set = MapSet.delete(pid_set, channel)
+    new_state = %{state | symbol => {last_quote, new_pid_set}}
+    if Enum.count(new_pid_set) > 0 do
       # remove channel from symbol's pub list in state
       {:ok, new_state}
     else
@@ -137,12 +145,10 @@ defmodule Investing.Finance.CoinbaseServer do
       # send unsubscribe event to gdax ticker
       {:reply, frame, new_state}
     end
-
-    {:ok, new_state}
   end
 
   def handle_cast({ :del_subscriber_from_all, channel }, state) do
-    if !Enum.any?(state, fn {symbol, set} -> Enum.member?(set, channel) end) do
+    if !Enum.any?(state, fn {symbol, {last_quote, pid_set}} -> Enum.member?(pid_set, channel) end) do
       IO.puts ">>>>> Deleting #{inspect channel} from "
       IO.inspect(state, label: ">>>>> subscribers")
     end
@@ -150,7 +156,7 @@ defmodule Investing.Finance.CoinbaseServer do
     # update state
     new_state =
       state
-      |> Enum.map(fn {symbol, set} -> {symbol, MapSet.delete(set, channel)} end)
+      |> Enum.map(fn {symbol, {last_quote, pid_set}} -> {symbol, {last_quote, MapSet.delete(pid_set, channel)}} end)
       |> Enum.into(%{})
 
     # unsubscribe from gdax when no one is listening on given symbol
@@ -158,7 +164,10 @@ defmodule Investing.Finance.CoinbaseServer do
     empty_symbols =
       new_state
       # find subscritions where is empty in new_state but non-empty in original state
-      |> Enum.filter(fn {symbol, set} -> Enum.empty?(set) && !Enum.empty?(state[symbol]) end)
+      |> Enum.filter(fn {symbol, {_, new_pid_set}} ->
+        {_, old_pid_set} = state[symbol]
+        Enum.empty?(new_pid_set) && !Enum.empty?(old_pid_set)
+      end)
       # retrieve symbols from those subscriptions
       |> Enum.map(fn {symbol, _} -> symbol end)
 
@@ -189,21 +198,25 @@ defmodule Investing.Finance.CoinbaseServer do
 
     if data["type"] == "ticker" do
       # IO.puts "============ recieved data"
+      symbol = data["product_id"]
 
-      channels = state[data["product_id"]]
-      # |> IO.inspect(label: "========= channel list")
-      |> Enum.each( fn channel ->
-        msg = {
-          :price_updated,
-          %{symbol: data["product_id"],
-            price: data["price"]}
-        }
-
-        is_pid(channel) && Process.alive?(channel) && Process.send(channel, msg, [])
-       end)
+      {_, pid_set} = state[symbol]
+      price = String.to_float(data["price"])
+      Enum.each(pid_set, fn channel ->
+        send_quote_to_channel(channel, symbol, price)
+      end)
+      {:ok, %{state | symbol => {price, pid_set}}}
+    else
+      {:ok, state}
     end
 
-    {:ok, state}
+  end
+
+  defp send_quote_to_channel(channel_pid, symbol, price)
+  when is_pid(channel_pid) and is_float(price) do
+    msg = { :price_updated, %{symbol: symbol, price: price} }
+
+    Process.alive?(channel_pid) && Process.send(channel_pid, msg, [])
   end
 
   ## invoked after a connection is established.

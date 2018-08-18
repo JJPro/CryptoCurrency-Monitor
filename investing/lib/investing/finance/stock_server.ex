@@ -80,7 +80,7 @@ defmodule Investing.Finance.StockServer do
   def handle_cast({ :add_subscriber, {symbol, channel} }, state) do
     new_state = if Map.has_key?(state, symbol) do
       with {price, channels} <- state[symbol] do
-        Logger.info("channels: #{inspect channels}, \n channel: #{inspect channel}")
+        # Logger.info("channels: #{inspect channels}, \n channel: #{inspect channel}")
         %{state | symbol => {price, MapSet.put(channels, [channel: channel, new?: true])}}
       end
     else
@@ -154,6 +154,12 @@ defmodule Investing.Finance.StockServer do
                |> Map.get(:body) #|> IO.inspect(label: ">>>>>>>> response body")
                |> Poison.decode!() #|> IO.inspect(label: ">>>>>>>> response data")
                |> Map.get("Stock Quotes") #|> IO.inspect(label: ">>>>>> quotes")
+
+      # quotes might be nil, when API volume throttling occur
+      quotes = quotes && Enum.map(quotes, fn (quote = %{"2. price" => priceStr}) ->
+                 %{quote | "2. price" => String.to_float(priceStr)}
+               end)
+      # IO.inspect(quotes, label: ">>>> quotes from api, check price type")
       {:ok, quotes}
     end
   end

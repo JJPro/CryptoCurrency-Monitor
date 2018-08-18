@@ -13,7 +13,7 @@ defmodule Investing.Finance.OrderManager do
   (Ref: [What is a limit order?](https://en.wikipedia.org/wiki/Order_(exchange)#Limit_order))
   """
   use GenServer
-  alias Investing.Finance
+  alias Investing.{Finance, Accounts}
   alias Investing.Finance.{ThresholdManager, Order, Holding}
   # alias Investing.Utils.Actions
   require Logger
@@ -252,6 +252,9 @@ defmodule Investing.Finance.OrderManager do
     # trigger action
     InvestingWeb.Endpoint.broadcast! "action_panel:#{holding.user_id}", "holding_updated", %{holding: holding, action: :increase}
 
+    # notify holding_channel to subscribe to live quote of this symbol
+    Phoenix.PubSub.broadcast!(Investing.PubSub, "holdings:#{holding.user_id}", {:subscribe_symbol, holding.symbol})
+
     order
   end
   defp update_holding_position(order = %Order{action: "sell"}, _trading_price) do
@@ -278,6 +281,12 @@ defmodule Investing.Finance.OrderManager do
     Finance.delete_holding(holding)
     InvestingWeb.Endpoint.broadcast! "action_panel:#{holding.user_id}", "holding_updated", %{holding: holding, action: :delete}
 
+    # notify holdings channel to unsub from live quotes if there is no more
+    # holdings of the same symbol
+    if __last_holding_of_the_symbol?(holding) do
+      Phoenix.PubSub.broadcast!(Investing.PubSub, "holdings:#{holding.user_id}", {:unsubscribe_symbol, holding.symbol})
+    end
+
     qty_to_decrease = qty_to_decrease - qty
     _decrease_holdings(rest, qty_to_decrease)
   end
@@ -287,6 +296,13 @@ defmodule Investing.Finance.OrderManager do
     updated_holding_qty = qty - qty_to_decrease
     Finance.update_holding(holding, %{quantity: updated_holding_qty})
     InvestingWeb.Endpoint.broadcast! "action_panel:#{holding.user_id}", "holding_updated", %{holding: holding, action: :decrease, amt: qty_to_decrease}
+  end
+
+  defp __last_holding_of_the_symbol?(holding) do
+    user = Accounts.get_user!(holding.user_id)
+            |> Investing.Repo.preload(:holdings)
+
+    Enum.any?(user.holdings, &(&1.symbol == holding.symbol))
   end
 
 

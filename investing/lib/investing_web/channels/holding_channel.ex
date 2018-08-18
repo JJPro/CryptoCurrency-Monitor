@@ -29,6 +29,7 @@ defmodule InvestingWeb.HoldingChannel do
   use InvestingWeb, :channel
   alias Investing.Finance
   alias Investing.Accounts
+  require Logger
 
   def join("holdings:"<>uid, payload, socket) do
     if authorized?(payload) do
@@ -91,16 +92,23 @@ defmodule InvestingWeb.HoldingChannel do
     {:noreply, socket}
   end
 
-  @doc """
-  Handle "subscribe symbol" message from the client side (this was triggered by a broadcast from order manager when new holding is created)
-    - subscribe new holding to financial servers
-  """
-  def handle_in("subscribe symbol", %{"symbol" => symbol}, socket) do
-    Finance.subscribe(symbol, self())
-
+  def handle_info({:test, data}, socket) do
+    Logger.info("received data: #{inspect data}")
     {:noreply, socket}
   end
-  def handle_in("unsubscribe symbol", %{"symbol" => symbol}, socket) do
+
+  @doc """
+  Handle :subscribe_symbol message from the order_manager (this was triggered when new holding is created)
+    - subscribe new holding to financial servers
+
+  It's okay to send duplicate subscriptions, since quote servers state are unique mapset.
+  """
+  def handle_info({:subscribe_symbol, symbol}, socket) do
+    Finance.subscribe(symbol, self())
+    {:noreply, socket}
+  end
+
+  def handle_info({:unsubscribe_symbol, symbol}, socket) do
     Finance.unsubscribe(symbol, self())
 
     {:noreply, socket}
