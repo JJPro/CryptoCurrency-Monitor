@@ -19,7 +19,7 @@ export default function ConfirmModal(props) {
         <div className="modal-content">
           <div className="modal-header">
             <h5 className="modal-title" id="confirmationModalLabel">
-              {props.title && "Are You Sure?"}
+              {props.title || "Are You Sure?"}
             </h5>
             <button type="button" className="close" data-dismiss="modal" aria-label="Close">
               <span aria-hidden="true">&times;</span>
@@ -30,10 +30,10 @@ export default function ConfirmModal(props) {
           </div>
           <div className="modal-footer">
             <button type="button" className="btn btn-secondary" data-dismiss="modal">
-              { props.abortText && "Abort Operation"}
+              { props.abortText || "Abort Operation"}
             </button>
-            <button type="button" className="btn {props.confirmButtonClass}" onClick={() => props.confirmAction()}>
-              { props.confirmText && "Confirm" }
+            <button type="button" className={`btn ${props.confirmButtonClass}`} onClick={props.confirmationAction}>
+              { props.confirmText || "Confirm" }
             </button>
           </div>
         </div>

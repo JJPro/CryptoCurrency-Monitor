@@ -7,7 +7,7 @@ import utils from '../redux/utils';
 
 import OrderEntry from './portfolio-parts/order-entry';
 import HoldingEntry from './portfolio-parts/holding-entry';
-import ConfirmCancelOrderModal from './portfolio-parts/confirm-cancel-order-modal';
+import ConfirmationModal from './portfolio-parts/confirmation-modal';
 
 
 export default connect( state_map )( class Portfolio extends Component {
@@ -26,6 +26,9 @@ export default connect( state_map )( class Portfolio extends Component {
     window.portfolio = this;
 
     this.channelInit();
+
+    this.cancelOrder = this.cancelOrder.bind(this);
+    this.confirmationModalBody = this.confirmationModalBody.bind(this);
   }
 
   channelInit() {
@@ -96,9 +99,9 @@ export default connect( state_map )( class Portfolio extends Component {
     });
   }
 
-  cancelOrder(o){
-    this.ordersChannel.push("cancel order", {order_id: o.id})
-    .receive("ok", () => utils.dismissModal("#confirmCancelOrderModal"))
+  cancelOrder(){
+    this.ordersChannel.push("cancel order", {order_id: this.state.orderToCancel.id})
+    .receive("ok", () => utils.dismissModal("#confirmationModal"))
     .receive("error", () => utils.reportError("an error has occurred, please try again later."));
   }
 
@@ -115,6 +118,26 @@ export default connect( state_map )( class Portfolio extends Component {
   quote(symbol){
     let quoteObject = this.state.liveQuotes.find( q => q.symbol == symbol );
     return quoteObject && quoteObject.quote;
+  }
+
+  confirmationModalBody(){
+    let symbol, id, action, target;
+    this.state.orderToCancel && ({action, symbol, target} = this.state.orderToCancel);
+    let style = {};
+    style.symbol = {color: "dodgerblue",fontWeight: "bold",textDecoration: "underline",};
+
+    return (
+      <React.Fragment>
+        You are about to <span className="font-weight-bold">cancel</span> <span className={(action=="buy"?"text-success":"text-danger") + " font-weight-bold font-italic"}>
+          {action}
+        </span> <span style={style.symbol}>
+          {symbol}
+        </span> at <span className="font-italic font-weight-bold">
+          {target && utils.currencyFormatString(target, true)}
+        </span>
+        .
+      </React.Fragment>
+    );
   }
 
   render(){
@@ -187,8 +210,7 @@ export default connect( state_map )( class Portfolio extends Component {
               {this.state.orders.inactive.map( o => <OrderEntry order={o} key={o.id} />)}
             </tbody>
           </table>
-          <ConfirmCancelOrderModal orderToCancel={this.state.orderToCancel}
-                                   cancelOrder={ o => this.cancelOrder(o) }/>
+          <ConfirmationModal body={this.confirmationModalBody()} confirmButtonClass="btn-danger" confirmText="Confirm Deletion" confirmationAction={ this.cancelOrder }/>
         </div>
       </div>
     );
