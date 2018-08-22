@@ -4,11 +4,14 @@ import socket from '../socket';
 import api from '../redux/api';
 import utils from '../redux/utils';
 import store from '../redux/store';
-
+import ConfirmationModal from './confirmation-modal';
 
 export default connect( state_map )( class Watchlist extends Component {
   constructor(props){
     super(props);
+    this.state = {
+      itemToDelete: null
+    };
     this.channelInit();
 
     if (window.userToken){
@@ -19,7 +22,52 @@ export default connect( state_map )( class Watchlist extends Component {
       });
     }
 
-    this.removeAsset = this.removeAsset.bind(this);
+    this.setItemToRemove = this.setItemToRemove.bind(this);
+    this.confirmDeleteWatchItemModalText = this.confirmDeleteWatchItemModalText.bind(this);
+    this.deleteWatchItem = this.deleteWatchItem.bind(this);
+  }
+
+  channelInit() {
+    this.channel = socket.channel(`watchlist:${window.userToken}`);
+    this.channel.join()
+    .receive("ok")
+    .receive("error", resp => { console.log("Unable to join watchlist channel", resp) });
+
+    this.channel.on("update_asset_price", (asset) => {
+      store.dispatch({
+        type: "UPDATE_ASSET_PRICE",
+        asset: asset
+      })
+    });
+    // console.log(this.props);
+  }
+
+  setItemToRemove(asset) {
+    this.setState({itemToDelete: asset});
+  }
+
+  confirmDeleteWatchItemModalText(){
+    let symbol;
+    this.state.itemToDelete && ({symbol} = this.state.itemToDelete);
+    let style = {
+      symbol: {
+        color: "dodgerblue",fontWeight: "bold",
+        textDecoration: "underline",
+      },
+    };
+    return (
+      <React.Fragment>
+        You are about to delete watchlist item <span style={style.symbol}>{symbol}</span>
+      </React.Fragment>
+    );
+  }
+
+  deleteWatchItem(){
+    let asset = this.state.itemToDelete;
+    api.delete_asset(window.userToken, asset);
+
+    this.channel.push("unsubscribe", {token: window.userToken, asset: asset});
+    utils.dismissModal("#confirmationModal");
   }
 
   render(){
@@ -43,10 +91,15 @@ export default connect( state_map )( class Watchlist extends Component {
             </thead>
             <tbody>
               {
-                this.props.assets.map( (asset) => <WatchlistEntry asset={ asset } removeAsset={this.removeAsset.bind(this)} key={ asset.id } /> )
+                this.props.assets.map( (asset) => <WatchlistEntry asset={ asset } setItemToRemove={this.setItemToRemove} key={ asset.id } /> )
               }
             </tbody>
           </table>
+          <ConfirmationModal body={this.confirmDeleteWatchItemModalText()}
+            abortText="Keep" confirmButtonClass="btn-danger"
+            confirmText="Confirm Deletion"
+            confirmAction={this.deleteWatchItem}
+             />
         </div>
       );
     } else {
@@ -58,36 +111,6 @@ export default connect( state_map )( class Watchlist extends Component {
       );
     }
   }
-
-  channelInit() {
-    this.channel = socket.channel(`watchlist:${window.userToken}`);
-    this.channel.join()
-    .receive("ok")
-    .receive("error", resp => { console.log("Unable to join watchlist channel", resp) });
-
-    this.channel.on("update_asset_price", (asset) => {
-      store.dispatch({
-        type: "UPDATE_ASSET_PRICE",
-        asset: asset
-      })
-    });
-    // console.log(this.props);
-  }
-
-  // componentDidMount(){
-  //   console.log("compoent did mount", this.props.assets);
-  //   if (this.props.assets.length > 0)
-  //     this.channel.push("batch_subscribe", {token: window.userToken, assets: this.props.assets});
-  //
-  // }
-
-  removeAsset(asset) {
-    api.delete_asset(window.userToken, asset);
-
-    this.channel.push("unsubscribe", {token: window.userToken, asset: asset});
-  }
-
-
 } );
 
 function state_map(state) {
@@ -118,7 +141,7 @@ function WatchlistEntry(props) {
       <td style={style.symbol}>{ props.asset.symbol }</td>
       <td style={style.price }>{ utils.currencyFormatString(props.asset.price) }</td>
       <td style={style.actioncell}>
-        <button type="button" style={style.close_btn} aria-label="Close" onClick={ () => props.removeAsset(props.asset) }>
+        <button type="button" style={style.close_btn} aria-label="Close" data-toggle="modal" data-target="#confirmationModal" onClick={ () => props.setItemToRemove(props.asset) }>
           <svg fill="#000000" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
               <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
               <path d="M0 0h24v24H0z" fill="none"/>

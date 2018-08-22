@@ -3,22 +3,54 @@ import { connect } from 'react-redux';
 import api from '../redux/api';
 import store from '../redux/store';
 import socket from '../socket';
+import ConfirmationModal from './confirmation-modal';
+import utils from '../redux/utils';
 
 export default connect( state_map )( class Alerts extends Component {
   constructor(props) {
     super(props);
+
+    this.state = {
+      alertToRemove: null,
+    };
+
     this.channel = props.channel;
     this.channelInit(); // take advantage of watchlist channel to update prices
+
+    this.removeAlert = this.removeAlert.bind(this);
+    this.setAlertToRemove = this.setAlertToRemove.bind(this);
+    this.removeAlertConfirmationBody = this.removeAlertConfirmationBody.bind(this);
   }
 
-  removeAlert(alert) {
+  setAlertToRemove(alert){
+    this.setState({alertToRemove: alert});
+  }
+
+  removeAlert() {
+    let alert = this.state.alertToRemove;
     api.delete_alert(window.userToken, alert, () => {
       // unsub from real-time updates for optimization, but this is trivial
       let active_alerts = this.props.alerts.filter((a) => !a.expired);
       if ( ! active_alerts.find((a) => a.symbol == alert.symbol) ){
         this.channel.push("unsubscribe", {token: window.userToken, alert: alert});
       }
+      utils.dismissModal("#confirmationModal");
     });
+  }
+
+  removeAlertConfirmationBody(){
+    let style={
+      symbol: {color: "dodgerblue",fontWeight: "bold",textDecoration: "underline",},
+      condition: {color: "orange", fontWeight: "bold"},
+    };
+    let symbol, condition;
+    this.state.alertToRemove && ({symbol, condition} = this.state.alertToRemove);
+
+    return (
+      <React.Fragment>
+        You are about to delete alert <span style={style.symbol}>{symbol}</span> <span style={style.condition}>{condition}</span>, you will not get notifications about it afterwards.
+      </React.Fragment>
+    );
   }
 
   channelInit(){
@@ -66,7 +98,7 @@ export default connect( state_map )( class Alerts extends Component {
             <tbody>
               {
                 this.props.alerts.filter((alert) => !alert.expired).map(
-                  (alert) => <AlertEntry alert={ alert } removeAlert={ this.removeAlert.bind(this) } key={ alert.id } /> )
+                  (alert) => <AlertEntry alert={ alert } setAlertToRemove={ this.setAlertToRemove } key={ alert.id } /> )
               }
             </tbody>
           </table>
@@ -84,12 +116,14 @@ export default connect( state_map )( class Alerts extends Component {
             </thead>
             <tbody>
               {
-                this.props.alerts.filter((alert) => alert.expired).map( (alert) => <AlertEntry alert={ alert } removeAlert={ this.removeAlert.bind(this) } key={ alert.id } /> )
+                this.props.alerts.filter((alert) => alert.expired).map( (alert) => <AlertEntry alert={ alert } setAlertToRemove={ this.setAlertToRemove } key={ alert.id } /> )
               }
             </tbody>
           </table>
 
         </div>
+        <ConfirmationModal body={this.removeAlertConfirmationBody()} abortText="Keep" confirmButtonClass="btn-danger" confirmText="Confirm Delete"
+          confirmAction={this.removeAlert} />
       </div>
     );
   }
@@ -120,7 +154,7 @@ function AlertEntry(props) {
       {!props.alert.expired && <td style={style.price }>{ props.alert.price }</td>}
       <td style={style.condition}>{ props.alert.condition }</td>
       <td style={style.actioncell}>
-        <button type="button" style={style.close_btn} aria-label="Close" onClick={ () => props.removeAlert(props.alert) }>
+        <button type="button" style={style.close_btn} aria-label="Close" onClick={ () => props.setAlertToRemove(props.alert) } data-toggle="modal" data-target="#confirmationModal" >
           <span aria-hidden="true" style={style.close_txt}>&times;</span>
         </button>
       </td>

@@ -7,7 +7,7 @@ import utils from '../redux/utils';
 
 import OrderEntry from './portfolio-parts/order-entry';
 import HoldingEntry from './portfolio-parts/holding-entry';
-import ConfirmationModal from './portfolio-parts/confirmation-modal';
+import ConfirmationModal from './confirmation-modal';
 
 
 export default connect( state_map )( class Portfolio extends Component {
@@ -59,15 +59,18 @@ export default connect( state_map )( class Portfolio extends Component {
       if (this.state.liveQuotes.some(q => q.symbol == symbol)) {
         this.setState({
           liveQuotes: this.state.liveQuotes.map(q => {
-            if (q.symbol == symbol)
-            return {symbol: symbol, quote: price};
+            if (q.symbol == symbol){
+              let trend = price > q.quote ? "up" : "down";
+              // console.log("trend", trend);
+              return {symbol: symbol, quote: price, trend: trend};
+            }
             else
             return q;
           })
         });
       } else {
         let newQuotes = Array.from(this.state.liveQuotes);
-        newQuotes.push({symbol: symbol, quote: price});
+        newQuotes.push({symbol: symbol, quote: price, trend: null});
         // console.log("new quotes", newQuotes);
         this.setState({
           liveQuotes: newQuotes,
@@ -117,7 +120,7 @@ export default connect( state_map )( class Portfolio extends Component {
 
   quote(symbol){
     let quoteObject = this.state.liveQuotes.find( q => q.symbol == symbol );
-    return quoteObject && quoteObject.quote;
+    return quoteObject;
   }
 
   confirmationModalBody(){
@@ -141,7 +144,13 @@ export default connect( state_map )( class Portfolio extends Component {
   }
 
   render(){
-    let style = {};
+    let style = {
+      summary: {
+        label: {display: "inline-block", width: "9em", fontWeight: "bold"},
+        value: {fontWeight: 500},
+      },
+    };
+    let totalGainColor;
 
     let totalEquityStr; // "balance + sum(value of holdings)"
     let totalGainStr; // e.g. "+$1,100.99"
@@ -149,12 +158,14 @@ export default connect( state_map )( class Portfolio extends Component {
 
     if (this.state.liveQuotes.length == new Set(this.props.holdings.map( h => h.symbol )).size){
       // all live quotes are ready, let's calculate the total equity and total gain
-      let holdingSum = this.props.holdings.reduce( (acc, h) => acc + this.quote(h.symbol), 0);
+      let holdingSum = this.props.holdings.reduce( (acc, h) => acc + this.quote(h.symbol).quote, 0);
       let totalEquity = this.props.balance.total + holdingSum;
       totalEquityStr = utils.currencyFormatString(totalEquity, true);
 
-      let totalGain = this.props.holdings.reduce( (acc, h) => acc + h.quantity * (this.quote(h.symbol) - h.bought_at), 0);
-      totalGainStr = utils.currencyFormatString(totalGain, true);
+      let totalGain = this.props.holdings.reduce( (acc, h) => acc + h.quantity * (this.quote(h.symbol).quote - h.bought_at), 0);
+      totalGainStr = utils.currencyFormatString(totalGain, true, true);
+
+      totalGainColor = totalGain >= 0 ? "#28a745" : "#dc3545";
 
       totalGainPercentStr = utils.percentFormatString( totalGain / (holdingSum - totalGain) );
       totalGainPercentStr = `(${totalGainPercentStr})`;
@@ -168,11 +179,16 @@ export default connect( state_map )( class Portfolio extends Component {
     return (
       <div id="portfolio">
         <h1>Portfolio</h1>
-        <ul className="account-summary" style={style.summary}>
-          <li>Total Equity: { totalEquityStr }</li>
-          <li>Purchase Power: {utils.currencyFormatString(this.props.balance.usable, true)}</li>
-          <li>Total Gain: <span style={style.totalGain}>{`${totalGainStr}${totalGainPercentStr}`}</span></li>
-        </ul>
+        <div className="row account-summary shadow-sm p-2">
+          <div className="col-auto mr-3">
+            <span style={style.summary.label}>Total Equity:</span> <span style={style.summary.value}>{ totalEquityStr }</span>
+            <br/>
+            <span style={style.summary.label}>Purchase Power:</span> <span  style={style.summary.value}>{utils.currencyFormatString(this.props.balance.usable, true)}</span>
+          </div>
+          <div className="col">
+            <span style={{...style.summary.label, width:"6em"}}>Total Gain:</span> <span style={{...style.summary.value, color: totalGainColor}}>{`${totalGainStr}${totalGainPercentStr}`}</span>
+          </div>
+        </div>
         <div className="position" style={style.position}>
           <h2>Position:</h2>
           <table className="table">
@@ -210,7 +226,7 @@ export default connect( state_map )( class Portfolio extends Component {
               {this.state.orders.inactive.map( o => <OrderEntry order={o} key={o.id} />)}
             </tbody>
           </table>
-          <ConfirmationModal body={this.confirmationModalBody()} confirmButtonClass="btn-danger" confirmText="Confirm Deletion" confirmationAction={ this.cancelOrder }/>
+          <ConfirmationModal body={this.confirmationModalBody()} confirmButtonClass="btn-danger" confirmText="Confirm Deletion" confirmAction={ this.cancelOrder }/>
         </div>
       </div>
     );

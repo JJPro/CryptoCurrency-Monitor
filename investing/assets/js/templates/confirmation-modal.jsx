@@ -1,5 +1,5 @@
 import React from 'react';
-import utils from '../../redux/utils';
+import utils from '../redux/utils';
 
 export default function ConfirmModal(props) {
   /**
@@ -32,7 +32,7 @@ export default function ConfirmModal(props) {
             <button type="button" className="btn btn-secondary" data-dismiss="modal">
               { props.abortText || "Abort Operation"}
             </button>
-            <button type="button" className={`btn ${props.confirmButtonClass}`} onClick={props.confirmationAction}>
+            <button type="button" className={`btn ${props.confirmButtonClass}`} onClick={props.confirmAction}>
               { props.confirmText || "Confirm" }
             </button>
           </div>

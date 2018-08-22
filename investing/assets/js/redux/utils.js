@@ -45,16 +45,40 @@ class Utils {
   }
 
   // format string
-  currencyFormatString(num, printSymbol = false){
+  currencyFormatString(num, printSymbol = false, printSign = false){
+    let result;
     if (printSymbol){
-      return num.toLocaleString("en-US", {style: "currency", currency:'USD'});
+      result = num.toLocaleString("en-US", {style: "currency", currency:'USD'});
     } else {
-      return num.toLocaleString("en-US");
+      result = num.toLocaleString("en-US");
     }
+    if (printSign) {
+      // add + to pos num
+      if (num >= 0)
+      result = "+" + result;
+    } else {
+      // remove - for neg num
+      if (num < 0)
+      result = result.substring(1);
+    }
+
+    return result;
   }
 
-  percentFormatString(num){
-    return num.toLocaleString('en-US', {style: 'percent', maximumFractionDigits: 2});
+  percentFormatString(num, printSign = false){
+    let result =  num.toLocaleString('en-US', {style: 'percent', maximumFractionDigits: 2});
+
+    if (printSign) {
+      // add + to pos num
+      if (num >= 0)
+      result = "+" + result;
+    } else {
+      // remove - for neg num
+      if (num < 0)
+      result = result.substring(1);
+    }
+
+    return result;
   }
 
   // modal
