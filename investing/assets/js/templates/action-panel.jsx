@@ -156,7 +156,7 @@ export default connect( state_map )( class ActionPanel extends Component {
 
     return (
       <div className="fixed-bottom container-fluid action-panel" style={style.panel}>
-        <div className="container d-flex justify-content-around align-items-center py-5">
+        <div className="container d-flex justify-content-around align-items-center pt-2 pb-4">
           <div className="mr-5" style={style.search_field_wrapper}>
             {
               (() => {

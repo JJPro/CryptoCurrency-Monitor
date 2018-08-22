@@ -5,6 +5,10 @@ import api from '../redux/api';
 import store from '../redux/store';
 import utils from '../redux/utils';
 
+import OrderEntry from './portfolio-parts/order-entry';
+import HoldingEntry from './portfolio-parts/holding-entry';
+import ConfirmCancelOrderModal from './portfolio-parts/confirm-cancel-order-modal';
+
 
 export default connect( state_map )( class Portfolio extends Component {
   constructor(props){
@@ -15,9 +19,11 @@ export default connect( state_map )( class Portfolio extends Component {
         active: [],
         inactive: []
       },
+      orderToCancel: null,
     };
 
     window.utils = utils;
+    window.portfolio = this;
 
     this.channelInit();
   }
@@ -90,6 +96,12 @@ export default connect( state_map )( class Portfolio extends Component {
     });
   }
 
+  cancelOrder(o){
+    this.ordersChannel.push("cancel order", {order_id: o.id})
+    .receive("ok", () => utils.dismissModal("#confirmCancelOrderModal"))
+    .receive("error", () => utils.reportError("an error has occurred, please try again later."));
+  }
+
   moveOrderToInactive(order) {
     // remove from active list
     let active = this.state.orders.active.filter( o => o.id != order.id );
@@ -148,6 +160,7 @@ export default connect( state_map )( class Portfolio extends Component {
                 <th scope="col">Price</th>
                 <th scope="col">Qty</th>
                 <th scope="col">Gain/Loss</th>
+                <th scope="col"></th>
               </tr>
             </thead>
             <tbody>
@@ -166,20 +179,20 @@ export default connect( state_map )( class Portfolio extends Component {
                 <th scope="col">Quantity</th>
                 <th scope="col">Stop loss</th>
                 <th scope="col">Status</th>
+                <th scope="col"></th>
               </tr>
             </thead>
             <tbody>
-              {this.state.orders.active.map( o => <OrderEntry order={o} key={o.id} />)}
+              {this.state.orders.active.map( o => <OrderEntry order={o} key={o.id} setOrderToCancel={ order => {this.setState({orderToCancel: order})} } />)}
               {this.state.orders.inactive.map( o => <OrderEntry order={o} key={o.id} />)}
             </tbody>
           </table>
+          <ConfirmCancelOrderModal orderToCancel={this.state.orderToCancel}
+                                   cancelOrder={ o => this.cancelOrder(o) }/>
         </div>
       </div>
     );
   }
-
-
-
 });
 
 function state_map(state) {
@@ -188,41 +201,4 @@ function state_map(state) {
     holdings: state.holdings,
     // orders: state.orders,
   };
-}
-
-function HoldingEntry(props){
-  let quoteStr, gainStr;
-  quoteStr = gainStr = "";
-  if (props.quote){
-    quoteStr = utils.currencyFormatString(props.quote, true);
-    let gain = props.quote - props.holding.bought_at;
-    let gainDollarStr = utils.currencyFormatString(gain, true);
-    let gainPercentStr = utils.percentFormatString(gain/props.holding.bought_at);
-    gainStr = `${gainDollarStr} (${gainPercentStr})`;
-  }
-
-  return (
-    <tr>
-      <th scope="row">{props.holding.symbol}</th>
-      <td>{props.holding.bought_at}</td>
-      <td>{quoteStr}</td>
-      <td>{props.holding.quantity}</td>
-      <td>{gainStr}</td>
-    </tr>
-  );
-}
-
-function OrderEntry(props) {
-
-
-  return (
-    <tr>
-      <th scope="row">{props.order.symbol}</th>
-      <td>{props.order.action}</td>
-      <td>{utils.currencyFormatString(props.order.target)}</td>
-      <td>{props.order.quantity}</td>
-      <td>{props.order.stoploss && utils.currencyFormatString(props.order.stoploss)}</td>
-      <td>{props.order.status}</td>
-    </tr>
-  )
 }

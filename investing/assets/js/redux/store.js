@@ -8,6 +8,7 @@ import balanceReducer from './reducers/reducer-balance';
 import holdingsReducer from './reducers/reducer-holdings';
 // import ordersReducer from './reducers/reducer-orders';
 
+
 export default createStore(
   combineReducers({
     current_asset: currentAssetReducer,

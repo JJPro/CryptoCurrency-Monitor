@@ -56,6 +56,33 @@ class Utils {
   percentFormatString(num){
     return num.toLocaleString('en-US', {style: 'percent', maximumFractionDigits: 2});
   }
+
+  // modal
+  dismissModal(id){
+    $(id).modal('hide');
+  }
+
+  // show error message on top of window.
+  reportError(msg, autoDismiss = true){
+    // construct and append error msg container to document if not exists
+    let $container = $('#error-container');
+    $container = $container.length > 0 ? $container : $('<div id="error-container" class="fixed-top container text-center"></div>');
+    $container.appendTo('body');
+
+
+    // construct error element and append to error container
+    let $errMsg = $(`<div class="alert alert-danger fade show inline-block" role="alert" style="max-width: 400px; margin: 0 auto; border-radius: 0;">${msg}</div>`);
+    $errMsg.prependTo($container);
+
+    // animate
+    $errMsg.hide();
+    $errMsg.slideDown();
+
+    // window.err = $errMsg;
+    // dismiss
+    if (autoDismiss)
+      setTimeout(() => $errMsg.alert('close'), 5000);
+  }
 }
 
 export default new Utils();

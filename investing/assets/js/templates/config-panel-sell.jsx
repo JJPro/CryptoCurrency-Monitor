@@ -97,7 +97,7 @@ export default function ConfigPanelSell(props) {
   return (
     <React.Fragment>
       <h2>
-        <span className="text-danger">Buy </span>
+        <span className="text-danger">Sell </span>
         <span style={style.symbol}>{ props.symbol }</span>
       </h2>
       <p>

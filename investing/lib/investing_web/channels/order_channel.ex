@@ -56,7 +56,7 @@ defmodule InvestingWeb.OrderChannel do
 
     # Broadcasting to the clients is taken care of by OrderManager, nothing to do here.
 
-    {:noreply, socket}
+    {:reply, :ok, socket}
   end
 
   # # Channels can be used in a request/response fashion
