@@ -17,6 +17,7 @@ defmodule Investing.Finance.ThresholdManager do
   :threshold_met, %{symbol: xxx, condition: xxx, price: xxx}
   """
   use GenServer
+  require Logger
   alias Investing.Finance
 
 ### Public Interface:
@@ -115,6 +116,7 @@ defmodule Investing.Finance.ThresholdManager do
   # 3. unsubscribe from finance services if there is no more entries for the symbol
   ##
   def handle_info({:price_updated, %{symbol: symbol, price: price}}, state) do
+    # Logger.info("threshold manager price updated, price is number? #{is_number(price)}")
     {_, new_state} = state |> Map.get_and_update(symbol, fn thresholds ->
       new_thresholds = thresholds |> Enum.reject(  # step 2.
       fn (%{condition: condition, pid: pid, transient?: transient?}) -> # compare price and evaluate condition, to filter out all satisfied thresholds.

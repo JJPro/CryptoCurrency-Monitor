@@ -120,8 +120,7 @@ defmodule Investing.Finance.OrderManager do
   #
   # Description:
   #   find all satisfied orders, execute them and remove them from server state.
-  def handle_cast({:threshold_met, %{symbol: symbol, price: price, condition: condition}}, state) do
-    price = String.to_float(price)
+  def handle_cast({:threshold_met, %{symbol: symbol, price: price, condition: condition}}, state) when is_number(price) do
 
     new_state =
       state
@@ -201,11 +200,13 @@ defmodule Investing.Finance.OrderManager do
   # when this is a buy-stoploss order
   defp execute_order(
     order = %Order{stoploss: stoploss, action: action},
-    price)
+    price
+  )
   # TODO check what the stoploss value is when not provided on creation, is it NULL or 0?
   #       and revision of this block might be necessary accordingly
   when action == "buy" and not (is_nil(stoploss) or stoploss == 0)
   do
+    Logger.info("stoploss = #{stoploss}")
 
     order = order
     |> update_order_status() # 1.

@@ -53,7 +53,7 @@ export default class Alerts extends Component {
      */
     this.channel.on("alert created", ({alert}) => {
       let updatedActiveAlerts = Array.from(this.state.activeAlerts);
-      updatedActiveAlerts.unshift({symbol: alert.symbol, condition: alert.condition, trend: null});
+      updatedActiveAlerts.unshift(Object.assign(alert, {trend: null}));
       this.setState({activeAlerts: updatedActiveAlerts});
     });
 
@@ -125,6 +125,8 @@ export default class Alerts extends Component {
   render() {
 
     let style = {};
+
+    console.log("rerendering, ", this.state);
 
     return (
       <div>
