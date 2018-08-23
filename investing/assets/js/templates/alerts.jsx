@@ -126,8 +126,6 @@ export default class Alerts extends Component {
 
     let style = {};
 
-    console.log("rerendering, ", this.state);
-
     return (
       <div>
         <div>

@@ -202,12 +202,8 @@ defmodule Investing.Finance.OrderManager do
     order = %Order{stoploss: stoploss, action: action},
     price
   )
-  # TODO check what the stoploss value is when not provided on creation, is it NULL or 0?
-  #       and revision of this block might be necessary accordingly
-  when action == "buy" and not (is_nil(stoploss) or stoploss == 0)
+  when action == "buy" and not is_nil(stoploss)
   do
-    Logger.info("stoploss = #{stoploss}")
-
     order = order
     |> update_order_status() # 1.
     |> update_account_balance(price) # 3.
