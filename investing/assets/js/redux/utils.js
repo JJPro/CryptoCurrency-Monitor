@@ -2,33 +2,39 @@ import store from './store';
 import socket from '../socket';
 
 class Utils {
+  actionChannel(){
+    return socket.channels.find((ch) => ch.topic.startsWith("action_panel"));
+  }
+
   configAlert(symbol) {
     store.dispatch({
-      type: "CONFIG_ASSET",
-      config_options: {symbol: symbol, type: "alert"}
+      type: "CONFIG_ASSET",  // reducer-config-panel.js, trigger ConfigPanelAlert
+      config_options: {
+        symbol: symbol,
+        type: "alert",
+        submit: (condition) => this.actionChannel().push("create alert", {symbol: symbol, condition: condition}),
+      }
     });
   }
 
   configBuy(symbol) {
-    let action_channel = socket.channels.find((ch) => ch.topic.startsWith("action_panel"));
     store.dispatch({
-      type: "CONFIG_ASSET",
+      type: "CONFIG_ASSET",  // reducer-config-panel.js
       config_options: {
         symbol: symbol,
         type: "buy",
-        submit: (price, qty, stoploss) => action_channel.push("place order", {action: "buy", target: price, symbol: symbol, quantity: qty, stoploss: stoploss}),
+        submit: (price, qty, stoploss) => this.actionChannel().push("place order", {action: "buy", target: price, symbol: symbol, quantity: qty, stoploss: stoploss}),
       }
     });
   }
 
   configSell(symbol) {
-    let action_channel = socket.channels.find((ch) => ch.topic.startsWith("action_panel"));
     store.dispatch({
-      type: "CONFIG_ASSET",
+      type: "CONFIG_ASSET",  // reducer-config-panel.js
       config_options: {
         symbol: symbol,
         type: "sell",
-        submit: (price, qty) => action_channel.push("place order", {action: "sell", target: price, symbol: symbol, quantity: qty}),
+        submit: (price, qty) => this.actionChannel().push("place order", {action: "sell", target: price, symbol: symbol, quantity: qty}),
       }
     });
   }

@@ -1,7 +1,7 @@
 defmodule InvestingWeb.PageController do
   use InvestingWeb, :controller
 
-  alias Investing.{Mailer, Email}
+  # alias Investing.{Mailer, Email}
 
   def index(conn, _params) do
     render conn, "index.html"

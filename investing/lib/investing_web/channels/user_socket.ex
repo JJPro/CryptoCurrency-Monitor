@@ -4,7 +4,7 @@ defmodule InvestingWeb.UserSocket do
   ## Channels
   channel "watchlist:*", InvestingWeb.WatchlistChannel
   channel "alert:*", InvestingWeb.AlertChannel
-  channel "action_panel:*", InvestingWeb.ActionPanelChannel # need the room name to extract uid from it. 
+  channel "action_panel:*", InvestingWeb.ActionPanelChannel # need the room name to extract uid from it.
   channel "orders:*", InvestingWeb.OrderChannel
   channel "holdings:*", InvestingWeb.HoldingChannel
 
@@ -23,7 +23,7 @@ defmodule InvestingWeb.UserSocket do
   #
   # See `Phoenix.Token` documentation for examples in
   # performing token verification on connect.
-  def connect(%{"token" => token}, socket) do
+  def connect(%{"token" => _token}, socket) do
     # max_age: 1209600 is equivalent to two weeks in seconds
     # IO.inspect(token, label: ">>>>>>> token")
     # case Phoenix.Token.verify(socket, "auth token", token, max_age: 86400) do

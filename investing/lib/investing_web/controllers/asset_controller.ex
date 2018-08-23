@@ -3,7 +3,7 @@ defmodule InvestingWeb.AssetController do
 
   alias Investing.Finance
   alias Investing.Finance.Asset
-  alias Investing.Accounts
+  # alias Investing.Accounts
 
   action_fallback InvestingWeb.FallbackController
 
@@ -38,7 +38,7 @@ defmodule InvestingWeb.AssetController do
 
   def delete(conn, %{"id" => id, "token" => token}) do
     asset = Finance.get_asset!(id)
-    with {:ok, user_id} <- Phoenix.Token.verify(conn, "auth token", token, max_age: 86400),
+    with {:ok, _user_id} <- Phoenix.Token.verify(conn, "auth token", token, max_age: 86400),
          {:ok, %Asset{}} <- Finance.delete_asset(asset) do
       send_resp(conn, :no_content, "")
     end

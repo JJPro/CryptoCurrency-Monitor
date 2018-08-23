@@ -42,7 +42,7 @@ defmodule InvestingWeb.HoldingChannel do
         # # push holding positions immediately after joining
         # send(self, :send_initial_data)
 
-      send(self, :request_live_updates)
+      send(self(), :request_live_updates)
 
       {:ok, socket}
     else
@@ -82,11 +82,11 @@ defmodule InvestingWeb.HoldingChannel do
     {:noreply, socket}
   end
 
-  @doc """
-  Subscribe to financial servers and on :price_updated,
-    simply push new price to the client, and let the client do the calculations
-    about earnings and stuff, since only the client has complete information about the holdings.
-  """
+  ##
+  # Subscribe to financial servers and on :price_updated,
+  #   simply push new price to the client, and let the client do the calculations
+  #   about earnings and stuff, since only the client has complete information about the holdings.
+  ##
   def handle_info({:price_updated, data}, socket) do
     push(socket, "price updated", data)
     {:noreply, socket}
@@ -97,12 +97,12 @@ defmodule InvestingWeb.HoldingChannel do
     {:noreply, socket}
   end
 
-  @doc """
-  Handle :subscribe_symbol message from the order_manager (this was triggered when new holding is created)
-    - subscribe new holding to financial servers
-
-  It's okay to send duplicate subscriptions, since quote servers state are unique mapset.
-  """
+  ##
+  # Handle :subscribe_symbol message from the order_manager (this was triggered when new holding is created)
+  #   - subscribe new holding to financial servers
+  #
+  # It's okay to send duplicate subscriptions, since quote servers state are unique mapset.
+  ##
   def handle_info({:subscribe_symbol, symbol}, socket) do
     Finance.subscribe(symbol, self())
     {:noreply, socket}

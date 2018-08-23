@@ -3,10 +3,8 @@ defmodule InvestingWeb.ActionPanelChannel do
   """
   use InvestingWeb, :channel
   alias Investing.Finance
-  alias Investing.Finance.CoinbaseServer
-  alias Investing.Finance.StockServer
   alias Investing.Finance.OrderManager
-  alias Investing.Finance.Order
+  alias Investing.Finance.AlertManager
   alias Investing.Accounts
   require Logger
 
@@ -19,31 +17,38 @@ defmodule InvestingWeb.ActionPanelChannel do
     end
   end
 
-  def terminate(msg, socket) do
+  def terminate(_msg, _socket) do
     Finance.unsubscribe_all(self())
     {:shutdown, :closed}
   end
 
-  # It is also common to receive messages from the client and
-  # broadcast to everyone in the current topic (action_panel:lobby).
-  def handle_in("symbol select", %{"old_symbol" => old_symbol, "new_symbol" => new_symbol, "market" => market}, socket) do
+  def handle_in("symbol select", %{"old_symbol" => old_symbol, "new_symbol" => new_symbol, "market" => _market}, socket) do
     # IO.puts ">>>>> symbol select triggered"
 
     # add symbol to server monitor list
     # in server: push "update_current_asset" down the websocket if there is change in price.
-    if old_symbol|>String.length > 0, do: Finance.unsubscribe(old_symbol, self)
-    Finance.subscribe(new_symbol, self)
+    if old_symbol|>String.length > 0, do: Finance.unsubscribe(old_symbol, self())
+    Finance.subscribe(new_symbol, self())
     {:noreply, socket}
   end
 
   def handle_in("place order", order, socket) do
     Logger.info("placing order, #{inspect order}")
-    Logger.info("uid, #{inspect socket.assigns.uid}")
     order =
       order
       |> Map.new(fn {k, v} -> {String.to_atom(k), v} end)
       |> Map.put(:user_id, socket.assigns.uid)
     OrderManager.place_order(order)
+    {:noreply, socket}
+  end
+
+  def handle_in("create alert", alert, socket) do
+    Logger.info("creating alert, #{inspect alert}")
+    alert =
+      alert
+      |> Map.new(fn {k, v} -> {String.to_atom(k), v} end)
+      |> Map.put(:user_id, socket.assigns.uid)
+    AlertManager.create_alert(alert)
     {:noreply, socket}
   end
 

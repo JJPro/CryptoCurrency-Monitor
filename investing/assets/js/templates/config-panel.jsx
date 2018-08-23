@@ -71,7 +71,7 @@ export default connect(state_map)(class ConfigPanel extends Component {
     let panel_submodule = null;
     switch (this.props.type) {
       case "alert":
-        panel_submodule = <ConfigPanelAlert symbol={this.props.symbol} dismiss={this.dismiss} animate_error={this.animate_error} />;
+        panel_submodule = <ConfigPanelAlert symbol={this.props.symbol} dismiss={this.dismiss} submit={this.props.submit} animate_error={this.animate_error} />;
         break;
       case "buy":
         panel_submodule = <ConfigPanelBuy symbol={this.props.symbol} dismiss={this.dismiss} submit={this.props.submit} animate_error={this.animate_error} />;

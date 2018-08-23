@@ -27,7 +27,6 @@ defmodule InvestingWeb.OrderChannel do
   """
   use InvestingWeb, :channel
   alias Investing.Finance
-  alias Investing.Utils.Actions
   alias Investing.Finance.OrderManager
 
   def join("orders:"<>uid, payload, socket) do
@@ -35,7 +34,7 @@ defmodule InvestingWeb.OrderChannel do
       socket = assign(socket, :uid, String.to_integer(uid))       # attach uid with socket
 
       # push order history list immediately after joining
-      send(self, :list_orders)
+      send(self(), :list_orders)
 
       {:ok, socket}
     else

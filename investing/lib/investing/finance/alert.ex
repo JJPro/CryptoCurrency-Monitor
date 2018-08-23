@@ -2,6 +2,8 @@ defmodule Investing.Finance.Alert do
   use Ecto.Schema
   import Ecto.Changeset
 
+  @derive {Poison.Encoder, only: [:id, :condition, :symbol, :expired, ]}
+
 
   schema "alerts" do
     field :condition, :string

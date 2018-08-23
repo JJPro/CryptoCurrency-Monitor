@@ -1,6 +1,6 @@
 defmodule InvestingWeb.Plugs.SetUser do
   import Plug.Conn
-  alias Investing.{Accounts, Accounts.User}
+  alias Investing.Accounts
 
   def init(_params) do
   end

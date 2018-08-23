@@ -1,6 +1,6 @@
 defmodule InvestingWeb.Plugs.RequireAuth do
   import Plug.Conn
-  alias Investing.{Accounts, Accounts.User}
+  # alias Investing.{Accounts, Accounts.User}
   import InvestingWeb.Router.Helpers, only: [session_path: 2]
   import Phoenix.Controller, only: [redirect: 2]
 

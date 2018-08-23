@@ -50,18 +50,21 @@ export default function ConfigPanelAlert(props){
 
   function submitAlert() {
 
-    // validate threshold field
-    if (alert.threshold.trim()){
+    if (_validate()){
       // API call accepts format:  > 200
       // convert: {symbol, threshold, condition} ==> {symbol, condition}
       let condition = `${alert.condition} ${alert.threshold}`;
-      api.add_alert(window.userToken, alert.symbol, condition, () => {
-        props.dismiss();
-      });
+      props.submit(condition);
+      props.dismiss();
+    }
+  }
 
+  function _validate(){
+    if (alert.threshold.trim()){
+      return true;
     } else {
-      // threshold is empty, alert by shaking the input box
       props.animate_error(threshold.current);
+      return false;
     }
   }
 
@@ -76,6 +79,6 @@ export default function ConfigPanelAlert(props){
       <input className="config-panel-field" type="number" style={style.input} ref={threshold} onChange={changeThreshold} />
     </div>
     <button className="btn btn-success btn-lg" style={style.submit_button} onClick={submitAlert}>Alert Me</button>
-    <p className="description mt-3 text-muted font-weight-light">Alerts will be sent to your email when condition is met.</p>
+    <small className="mt-3 text-muted form-text">Alerts will be sent to your email when condition is met.</small>
   </React.Fragment>
 }

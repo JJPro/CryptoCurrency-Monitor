@@ -46,23 +46,26 @@ defmodule Investing.Finance.ThresholdManager do
 
 
 ### GenServer Implementation
+  def init(args) do
+    {:ok, args}
+  end
   def terminate(_reason, state) do
     {:shutdown, state}
   end
 
-  @doc """
-  add subscriber to server state map, and subscribe to finance servers
-  There are no duplicates in server state, use MapSet as an intermediate to process the addition operation.
-
-  string symbol:    symbol to set the threshold for
-  string condition: the threshold condition, e.g. "> 200"
-  PID pid:          the subscriber pid, usually self/0
-  bool transient?:   is the threshold transient? If transient, threshold is only valid for once, and will automatically delete itself when condition is met.
-  """
+  ##
+  # add subscriber to server state map, and subscribe to finance servers
+  # There are no duplicates in server state, use MapSet as an intermediate to process the addition operation.
+  #
+  # string symbol:    symbol to set the threshold for
+  # string condition: the threshold condition, e.g. "> 200"
+  # PID pid:          the subscriber pid, usually self/0
+  # bool transient?:   is the threshold transient? If transient, threshold is only valid for once, and will automatically delete itself when condition is met.
+  ##
   def handle_cast({:add_subscriber, {symbol, condition, pid, transient?}}, state) do
 
     # subscribe to finance servers.
-    Finance.subscribe(symbol, self)
+    Finance.subscribe(symbol, self())
 
     # new server state
     subscribers = Map.get(state, symbol, []) # get current subscribers, returns [] if doesn't exist
@@ -73,21 +76,21 @@ defmodule Investing.Finance.ThresholdManager do
     {:noreply, Map.put(state, symbol, new_subscribers)}
   end
 
-  @doc """
-  remove subscriber entry from the server state map,
-  and unsub from finance servers if there is no more entries for this symbol.
-
-  There are no duplicates in the server state.
-
-  ## Parameters
-    - symbol: String      Symbol for this operation
-    - condition: String   The threshold condition, e.g. "> 200"
-    - pid: PID            The subscriber's pid, usually passing self/0
-
-  ## Does the following:
-  1. remove entry from server state
-  2. unsubscribe from finance servers if new entry list for the symbol becomes empty
-  """
+  ##
+  # remove subscriber entry from the server state map,
+  # and unsub from finance servers if there is no more entries for this symbol.
+  #
+  # There are no duplicates in the server state.
+  #
+  # ## Parameters
+  #   - symbol: String      Symbol for this operation
+  #   - condition: String   The threshold condition, e.g. "> 200"
+  #   - pid: PID            The subscriber's pid, usually passing self/0
+  #
+  # ## Does the following:
+  # 1. remove entry from server state
+  # 2. unsubscribe from finance servers if new entry list for the symbol becomes empty
+  ##
   def handle_cast({:del_subscriber, {symbol, condition, pid}}, state) do
     subscribers = Map.get(state, symbol, [])
 
@@ -97,20 +100,20 @@ defmodule Investing.Finance.ThresholdManager do
 
     # step 2
     if (length(new_subscribers) == 0) do
-      Finance.unsubscribe(symbol, self)
+      Finance.unsubscribe(symbol, self())
     end
 
     {:noreply, %{state|symbol => new_subscribers}}
   end
 
-  @doc """
-  This message is received from coinbase and stock servers when prices are updated, you must handle it.
-
-  Check thresholds. Do the following if thresholds are met:
-  1. Notify the pids for each satisfied threshold.
-  2. Remove the subscriber from the list if threshold is trasient.
-  3. unsubscribe from finance services if there is no more entries for the symbol
-  """
+  ##
+  # This message is received from coinbase and stock servers when prices are updated, you must handle it.
+  #
+  # Check thresholds. Do the following if thresholds are met:
+  # 1. Notify the pids for each satisfied threshold.
+  # 2. Remove the subscriber from the list if threshold is trasient.
+  # 3. unsubscribe from finance services if there is no more entries for the symbol
+  ##
   def handle_info({:price_updated, %{symbol: symbol, price: price}}, state) do
     {_, new_state} = state |> Map.get_and_update(symbol, fn thresholds ->
       new_thresholds = thresholds |> Enum.reject(  # step 2.
@@ -135,7 +138,7 @@ defmodule Investing.Finance.ThresholdManager do
       # step 3.
       if length(new_thresholds) == 0 do
         IO.puts "Unsubing from symbol #{symbol}"
-        Finance.unsubscribe(symbol, self)
+        Finance.unsubscribe(symbol, self())
       end
 
       {thresholds, new_thresholds}

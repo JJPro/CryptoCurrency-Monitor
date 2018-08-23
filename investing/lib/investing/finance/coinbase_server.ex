@@ -40,7 +40,7 @@ defmodule Investing.Finance.CoinbaseServer do
   end
 
 ## Callbacks
-  def terminate(reason, state) do
+  def terminate(_reason, _state) do
     # IO.puts("WebSockex for remote debbugging on port #{state.port} terminating with reason: #{inspect reason}")
     exit(:normal)
   end
@@ -148,7 +148,7 @@ defmodule Investing.Finance.CoinbaseServer do
   end
 
   def handle_cast({ :del_subscriber_from_all, channel }, state) do
-    if !Enum.any?(state, fn {symbol, {last_quote, pid_set}} -> Enum.member?(pid_set, channel) end) do
+    if !Enum.any?(state, fn {_symbol, {_last_quote, pid_set}} -> Enum.member?(pid_set, channel) end) do
       IO.puts ">>>>> Deleting #{inspect channel} from "
       IO.inspect(state, label: ">>>>> subscribers")
     end
@@ -192,7 +192,7 @@ defmodule Investing.Finance.CoinbaseServer do
   {:close, close_frame, new_state} when new_state: term
   check state and broadcast to all channels of the received symbol update
   """
-  def handle_frame({type, msg}, state) do
+  def handle_frame({_type, msg}, state) do
     data = Poison.decode!(msg)
     # |> IO.inspect(label: "received message")
 

@@ -13,17 +13,17 @@ defmodule InvestingWeb.AssetView do
     %{data: render_one(asset, AssetView, "asset.json")}
   end
 
-  @doc """
-  for rendering asset json
-  """
+  ##
+  # for rendering asset json
+  ##
   def render("asset.json", %{asset: asset}) do
     %{id: asset.id,
       symbol: asset.symbol}
   end
 
-  @doc """
-  for rendering prompt
-  """
+  ##
+  # for rendering prompt
+  ##
   def render("prompt.json", %{asset: asset}) do
     %{symbol: asset.symbol,
       name: asset.name,

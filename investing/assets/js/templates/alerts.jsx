@@ -6,20 +6,83 @@ import socket from '../socket';
 import ConfirmationModal from './confirmation-modal';
 import utils from '../redux/utils';
 
-export default connect( state_map )( class Alerts extends Component {
+export default class Alerts extends Component {
   constructor(props) {
     super(props);
 
     this.state = {
+      activeAlerts: [], // alert is {symbol, quote, trend}
+      inactiveAlerts: [],
       alertToRemove: null,
     };
 
-    this.channel = props.channel;
-    this.channelInit(); // take advantage of watchlist channel to update prices
+    this.channelInit();
 
     this.removeAlert = this.removeAlert.bind(this);
     this.setAlertToRemove = this.setAlertToRemove.bind(this);
     this.removeAlertConfirmationBody = this.removeAlertConfirmationBody.bind(this);
+  }
+
+  channelInit(){
+    this.channel = socket.channel(`alert:${window.user_id}`);
+    this.channel.join()
+    .receive("ok")
+    .receive("error", resp => { console.log("Unable to join watchlist channel from alerts page", resp) });
+
+    this.channel.on("init alert list", ({active, inactive}) => {
+      // console.log("initializing alerts, active: ", active, ", inactive: ", inactive);
+      this.setState({activeAlerts: active, inactiveAlerts: inactive});
+    });
+
+    this.channel.on("price updated", ({symbol, price}) => {
+      // console.log("price updated, symbol: ", symbol, ", price: ", price);
+      let updatedActiveAlerts = this.state.activeAlerts.map(a => {
+        if (symbol == a.symbol){
+          let trend = price > a.quote ? "up" : "down";
+          return Object.assign(a, {quote: price, trend: trend});
+        }
+        else return a;
+      });
+      this.setState({activeAlerts: updatedActiveAlerts});
+    });
+
+    /** The following three messages are sent from AlertManager
+     * - "alert created",
+     * - "alert deleted",
+     * - "alert expired"
+     */
+    this.channel.on("alert created", ({alert}) => {
+      let updatedActiveAlerts = Array.from(this.state.activeAlerts);
+      updatedActiveAlerts.unshift({symbol: alert.symbol, condition: alert.condition, trend: null});
+      this.setState({activeAlerts: updatedActiveAlerts});
+    });
+
+    this.channel.on("alert deleted", ({alert}) => {
+      // remove alert from according state list
+      console.log("alert deleted, alert:", alert);
+      if (alert.expired){
+        this.setState({
+          inactiveAlerts: this.state.inactiveAlerts.filter(a => a.id != alert.id),
+        });
+      } else {
+        this.setState({
+          activeAlerts: this.state.activeAlerts.filter(a => a.id != alert.id),
+        });
+      }
+    });
+
+    this.channel.on("alert expired", ({alert}) => {
+      // remove from activeAlerts,
+      let activeAlerts = this.state.activeAlerts.filter(a => a.id != alert.id);
+
+      // unshift to inactiveAlerts.
+      let inactive = this.state.inactiveAlerts;
+      alert.expired = true;
+      inactive.unshift(alert);
+
+      this.setState({activeAlerts: activeAlerts, inactiveAlerts: inactive});
+    });
+
   }
 
   setAlertToRemove(alert){
@@ -28,14 +91,11 @@ export default connect( state_map )( class Alerts extends Component {
 
   removeAlert() {
     let alert = this.state.alertToRemove;
-    api.delete_alert(window.userToken, alert, () => {
-      // unsub from real-time updates for optimization, but this is trivial
-      let active_alerts = this.props.alerts.filter((a) => !a.expired);
-      if ( ! active_alerts.find((a) => a.symbol == alert.symbol) ){
-        this.channel.push("unsubscribe", {token: window.userToken, alert: alert});
-      }
-      utils.dismissModal("#confirmationModal");
-    });
+
+    console.log("pushing \"delete alert\", alert: ", alert);
+    this.channel.push("delete alert", {alert_id: alert.id})
+    .receive("ok", () => utils.dismissModal("#confirmationModal"))
+    .receive("error", () => utils.reportError("An error occurred, please try again later."));
   }
 
   removeAlertConfirmationBody(){
@@ -43,35 +103,22 @@ export default connect( state_map )( class Alerts extends Component {
       symbol: {color: "dodgerblue",fontWeight: "bold",textDecoration: "underline",},
       condition: {color: "orange", fontWeight: "bold"},
     };
-    let symbol, condition;
-    this.state.alertToRemove && ({symbol, condition} = this.state.alertToRemove);
+    let symbol, condition, expired;
+    this.state.alertToRemove && ({symbol, condition, expired} = this.state.alertToRemove);
 
-    return (
-      <React.Fragment>
-        You are about to delete alert <span style={style.symbol}>{symbol}</span> <span style={style.condition}>{condition}</span>, you will not get notifications about it afterwards.
-      </React.Fragment>
-    );
-  }
-
-  channelInit(){
-    this.channel = socket.channel(`alert:${window.userToken}`);
-    this.channel.join()
-    .receive("ok")
-    .receive("error", resp => { console.log("Unable to join watchlist channel from alerts page", resp) });
-
-    this.channel.on("update_asset_price", (asset) => {
-      // console.log(">>>>> price update", asset.symbol);
-      store.dispatch({
-        type: "UPDATE_ALERT_PRICE",
-        alert: asset
-      });
-    });
-
-    if (window.userToken){
-      api.request_alerts(window.userToken, () => {
-        // console.log(">>>>>>>>>> pushing batch subscribe");
-        this.channel.push("batch_subscribe", {token: window.userToken, alerts: this.props.alerts.filter((a) => !a.expired)});
-      });
+    if (expired){
+      return (
+        <React.Fragment>
+          You are about to delete this alert entry from your alerts history.
+        </React.Fragment>
+      );
+    } else {
+      return (
+        <React.Fragment>
+          You are about to delete alert <span style={style.symbol}>{symbol}</span> <span style={style.condition}>{condition}</span>
+        <small className="form-text text-muted">You will not get notifications about it any more.</small>
+        </React.Fragment>
+      );
     }
   }
 
@@ -79,9 +126,6 @@ export default connect( state_map )( class Alerts extends Component {
 
     let style = {};
 
-    /**
-    * props.alerts = [...{symbol, last_price, condition}...]
-    */
     return (
       <div>
         <div>
@@ -97,7 +141,7 @@ export default connect( state_map )( class Alerts extends Component {
             </thead>
             <tbody>
               {
-                this.props.alerts.filter((alert) => !alert.expired).map(
+                this.state.activeAlerts.map(
                   (alert) => <AlertEntry alert={ alert } setAlertToRemove={ this.setAlertToRemove } key={ alert.id } /> )
               }
             </tbody>
@@ -116,7 +160,8 @@ export default connect( state_map )( class Alerts extends Component {
             </thead>
             <tbody>
               {
-                this.props.alerts.filter((alert) => alert.expired).map( (alert) => <AlertEntry alert={ alert } setAlertToRemove={ this.setAlertToRemove } key={ alert.id } /> )
+                this.state.inactiveAlerts.map(
+                  (alert) => <AlertEntry alert={ alert } setAlertToRemove={ this.setAlertToRemove } key={ alert.id } /> )
               }
             </tbody>
           </table>
@@ -127,12 +172,6 @@ export default connect( state_map )( class Alerts extends Component {
       </div>
     );
   }
-} );
-
-function state_map(state) {
-  return {
-    alerts: state.alerts,
-  };
 }
 
 /*** ================================ ***/
@@ -142,16 +181,25 @@ function AlertEntry(props) {
   let style = {};
   style.symbol = {color: "dodgerblue", fontWeight: "bold"};
   style.price  = {
-    color: props.alert.price_color,
     fontWeight: "bold",
   };
+  switch (props.alert.trend) {
+    case "up":
+      style.price.color = "#28a745";
+      break;
+    case "down":
+      style.price.color = "#dc3545";
+      break;
+    default:
+      style.price.color = "inherit";
+  }
   style.close_btn = {borderRadius: "50%", padding: "2px", fontSize: "1.5rem", fontWeight: 700, lineHeight: 1, color: "#000", textShadow: "0 1px 0 #fff", opacity: .5, width: "1.5em", height: "1.5em", marginRight: "15px",};
   style.close_txt = {verticalAlign: "text-top"};
 
   return (
     <tr>
       <td style={style.symbol}>{ props.alert.symbol }</td>
-      {!props.alert.expired && <td style={style.price }>{ props.alert.price }</td>}
+      {!props.alert.expired && <td style={style.price }>{ props.alert.quote }</td>}
       <td style={style.condition}>{ props.alert.condition }</td>
       <td style={style.actioncell}>
         <button type="button" style={style.close_btn} aria-label="Close" onClick={ () => props.setAlertToRemove(props.alert) } data-toggle="modal" data-target="#confirmationModal" >

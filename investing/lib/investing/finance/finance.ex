@@ -177,6 +177,12 @@ defmodule Investing.Finance do
               select: a)
   end
 
+  def list_active_alerts_of_user(uid) do
+    Repo.all( from a in Alert,
+              where: a.user_id == ^uid and a.expired == false,
+              select: a)
+  end
+
   def list_active_alerts_with_users do
     Repo.all( from a in Alert,
               where: a.expired == false,
@@ -283,7 +289,7 @@ defmodule Investing.Finance do
     end
   end
 
-  def batch_subscribe(symbols, channel) do
+  def batch_subscribe(symbols, channel) when is_list(symbols) do
     cryptos = Enum.filter(symbols, fn s -> market(s) == "CryptoCurrency" end)
     stocks = symbols -- cryptos
 
@@ -291,7 +297,7 @@ defmodule Investing.Finance do
     if length(stocks) > 0, do: StockServer.batch_subscribe(stocks, channel)
   end
 
-  def batch_unsubscribe(symbols, channel) do
+  def batch_unsubscribe(symbols, channel) when is_list(symbols) do
     cryptos = Enum.filter(symbols, fn s -> market(s) == "CryptoCurrency" end)
     stocks = symbols -- cryptos
 

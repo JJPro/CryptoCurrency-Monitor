@@ -61,23 +61,23 @@ defmodule Investing.Finance.OrderManager do
   end
 
 
-  @doc """
-  pass a new order to the service to monitor
-
-  ## Parameters
-
-    - order: Order object
-  """
+  ##
+  # pass a new order to the service to monitor
+  #
+  # ## Parameters
+  #
+  #   - order: Order object
+  ##
   defp add_order(order) do
     GenServer.cast(__MODULE__, {:add_order, order})
   end
 
-  @doc """
-  delete an order from the service
-
-  ## Parameters
-    - order: Order object to delete
-  """
+  ##
+  # delete an order from the service
+  #
+  # ## Parameters
+  #   - order: Order object to delete
+  ##
   @spec del_order(Order) :: nil
   defp del_order(order) do
     GenServer.cast(__MODULE__, {:del_order, order})
@@ -114,13 +114,12 @@ defmodule Investing.Finance.OrderManager do
     {:shutdown, state}
   end
 
-  @doc """
-  handling :threshold_met message from ThresholdManager daemon
-  This function will be called to execute the order.
-
-  Description:
-    find all satisfied orders, execute them and remove them from server state.
-  """
+  ##
+  # handling :threshold_met message from ThresholdManager daemon
+  # This function will be called to execute the order.
+  #
+  # Description:
+  #   find all satisfied orders, execute them and remove them from server state.
   def handle_cast({:threshold_met, %{symbol: symbol, price: price, condition: condition}}, state) do
     price = String.to_float(price)
 
@@ -142,15 +141,14 @@ defmodule Investing.Finance.OrderManager do
     {:noreply, new_state}
   end
 
-  @doc """
-  Adds a new order to system while the system is already running.
-
-  ## Parameters
-    - order: Order object
-    - state: current state of this server.
-             state is of data format:
-             %{"symbol" => [list of pending orders]}
-  """
+  ##
+  # Adds a new order to system while the system is already running.
+  #
+  # ## Parameters
+  #   - order: Order object
+  #   - state: current state of this server.
+  #            state is of data format:
+  #            %{"symbol" => [list of pending orders]}
   def handle_cast({:add_order, order}, state) do
     ThresholdManager.subscribe(order.symbol, condition(order), self(), true)
 
@@ -161,19 +159,18 @@ defmodule Investing.Finance.OrderManager do
     {:noreply, new_state}
   end
 
-  @doc """
-  delete an order from the system.
-  This is triggerred when user manually deletes an active order,
-  needs to do the following:
-  1. remove this order from server state;
-  2. unsubscribe from threshold service if there is no orders of the same condition and symbol
-
-  ## Parameters
-    - order: Order object to delete
-    - state: current state of this server.
-             state is of data format:
-             %{"symbol" => [list of pending orders]}
-  """
+  ##
+  # delete an order from the system.
+  # This is triggerred when user manually deletes an active order,
+  # needs to do the following:
+  # 1. remove this order from server state;
+  # 2. unsubscribe from threshold service if there is no orders of the same condition and symbol
+  #
+  # ## Parameters
+  #   - order: Order object to delete
+  #   - state: current state of this server.
+  #            state is of data format:
+  #            %{"symbol" => [list of pending orders]}
   def handle_cast({:del_order, order}, state) do
     {_, new_state} = Map.get_and_update(state, order.symbol, fn orders ->
       if is_nil(orders) do # WARNING: this shouldn't happen, state is outta sync if this happens
@@ -191,15 +188,14 @@ defmodule Investing.Finance.OrderManager do
     {:noreply, new_state}
   end
 
-  @doc """
-  Places a buy-stoploss order.
-
-  Do the following:
-  1. set order status to be "executed" in db
-  2. place sell order for the stop loss
-  3. update user balance
-  4. create holding record for the order
-  """
+  ##
+  # Places a buy-stoploss order.
+  #
+  # Do the following:
+  # 1. set order status to be "executed" in db
+  # 2. place sell order for the stop loss
+  # 3. update user balance
+  # 4. create holding record for the order
   @spec execute_order(Order.t(), float) :: nil
 
   # when this is a buy-stoploss order
@@ -314,9 +310,9 @@ defmodule Investing.Finance.OrderManager do
 
 
 
-  @doc """
-  calculate the appropriate condition string for a given order.
-  """
+  ##
+  # calculate the appropriate condition string for a given order.
+  ##
   @spec condition(Order) :: String.t()
   defp condition(order) do
     case order.action do
@@ -332,7 +328,7 @@ defmodule Investing.Finance.OrderManager do
       "sell" -> :add
     end
     change_amt = price * order.quantity
-    new_balance = Finance.update_user_balance(order.user_id, action, change_amt)
+    _new_balance = Finance.update_user_balance(order.user_id, action, change_amt)
     InvestingWeb.Endpoint.broadcast! "action_panel:#{order.user_id}", "update_balance", %{type: :total, action: action, amt: change_amt}
 
     order
