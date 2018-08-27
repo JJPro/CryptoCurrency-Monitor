@@ -49,13 +49,16 @@ defmodule Investing.Finance.AlertManager do
   def delete_alert(alert) do
     Finance.delete_alert(alert) # removes db entry
 
-    del_alert(alert)            # remove from daemon state
+    if !alert.expired do # do the following only when alert is alive 
+      del_alert(alert)  # remove from daemon state, iff it is live
+
+      if __last_active_alert_of_same_symbol_and_user?(alert) do
+        Phoenix.PubSub.broadcast!(Investing.PubSub, "alert:#{alert.user_id}", {:unsubscribe_symbol, alert.symbol})
+      end
+    end
 
     # broadcast event
     InvestingWeb.Endpoint.broadcast!("alert:#{alert.user_id}", "alert deleted", %{alert: alert})
-    if __last_active_alert_of_same_symbol_and_user?(alert) do
-      Phoenix.PubSub.broadcast!(Investing.PubSub, "alert:#{alert.user_id}", {:unsubscribe_symbol, alert.symbol})
-    end
   end
 
   defp __last_active_alert_of_same_symbol_and_user?(alert) do

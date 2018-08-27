@@ -61,12 +61,16 @@ export default class Alerts extends Component {
       // remove alert from according state list
       console.log("alert deleted, alert:", alert);
       if (alert.expired){
+        let index = this.state.inactiveAlerts.findIndex( a => a.id == alert.id);
+        this.state.inactiveAlerts.splice(index, 1);
         this.setState({
-          inactiveAlerts: this.state.inactiveAlerts.filter(a => a.id != alert.id),
+          inactiveAlerts: this.state.inactiveAlerts
         });
       } else {
+        let index = this.state.activeAlerts.findIndex( a => a.id == alert.id);
+        this.state.activeAlerts.splice(index, 1);
         this.setState({
-          activeAlerts: this.state.activeAlerts.filter(a => a.id != alert.id),
+          activeAlerts: this.state.activeAlerts
         });
       }
     });

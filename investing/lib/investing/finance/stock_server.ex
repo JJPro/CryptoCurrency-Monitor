@@ -8,8 +8,8 @@ defmodule Investing.Finance.StockServer do
     # IO.puts ">>>>> StockServer Started"
     Process.send(__MODULE__, :auto_update_stocks, [])
     # periodically (every 24 hours) pull down company directory data from iex and save to local database,
-    # so that it will speed up company stock lookup
-    # Process.send(__MODULE__, :daily_download_company_directory, [])
+    # so that it will speed up company stock lookup, and support reverse lookup (company name -> symbol)
+    Process.send(__MODULE__, :daily_download_company_directory, [])
     result
   end
 
@@ -67,13 +67,14 @@ defmodule Investing.Finance.StockServer do
     {:noreply, state}
   end
 
-  @doc """
-  Periodically (every 24 hours) pull down company directory data from iex and save to local database,
-  Hence to speed up company stock lookup process in action-panel
-  """
+  ##
+  # Periodically (every 24 hours) pull down company directory data from iex and save to local database,
+  # Hence to speed up company stock lookup process in action-panel
+  ##
   def handle_info(:daily_download_company_directory, state) do
     Process.send_after(__MODULE__, :daily_download_company_directory, 1000*3600*24)
 
+    # TODO query alphavantage 
     {:noreply, state}
   end
 
