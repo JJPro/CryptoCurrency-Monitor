@@ -9,7 +9,6 @@
       <%= link "Logout", to: session_path(@conn, :delete), method: :get, class: "btn btn-secondary" %>
     <% else %>
       <%= link "Login", to: session_path(@conn, :new), class: "btn btn-primary" %>
-      <%= link "Register", to: user_path(@conn, :new), class: "btn btn-secondary" %>
     <% end %>
   </div>
 </nav>

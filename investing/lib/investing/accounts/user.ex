@@ -9,7 +9,7 @@ defmodule Investing.Accounts.User do
     field :email, :string
     field :password_hash, :string
     field :username, :string
-    field :balance, :float
+    field :balance, :float, default: 100000.00
     ## Virtual Fields ##
     field :password, :string, virtual: true
     field :password_confirmation, :string, virtual: true
