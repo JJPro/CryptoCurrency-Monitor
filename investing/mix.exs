@@ -11,7 +11,7 @@ defmodule Investing.Mixfile do
       start_permanent: Mix.env == :prod,
       aliases: aliases(),
       deps: deps(),
-      default_task: "phx.server", 
+      default_task: "phx.server",
     ]
   end
 
@@ -51,7 +51,7 @@ defmodule Investing.Mixfile do
       {:bamboo_smtp, "~> 1.4.0"},
       {:websockex, "~> 0.4.0"},
       {:httpoison, "~> 1.0"},
-      {:distillery, "~> 1.5", runtime: false}
+      {:distillery, "~> 2.0", runtime: false}
     ]
   end
 
