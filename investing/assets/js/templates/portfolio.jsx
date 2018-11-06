@@ -158,7 +158,7 @@ export default connect( state_map )( class Portfolio extends Component {
 
     if (this.state.liveQuotes.length == new Set(this.props.holdings.map( h => h.symbol )).size){
       // all live quotes are ready, let's calculate the total equity and total gain
-      let holdingSum = this.props.holdings.reduce( (acc, h) => acc + this.quote(h.symbol).quote, 0);
+      let holdingSum = this.props.holdings.reduce( (acc, h) => acc + this.quote(h.symbol).quote * h.quantity, 0);     
       let totalEquity = this.props.balance.total + holdingSum;
       totalEquityStr = utils.currencyFormatString(totalEquity, true);
 
